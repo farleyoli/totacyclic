@@ -1,7 +1,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "orientation.h"
+
+struct OrientBuffer {
+	// Buffer containing the orientations for each level of the BDD
+	struct OrientBuffer *next;
+	struct Orientation *orient;
+};
 
 struct BDDNode {
 	int v;			/* index of variable */
@@ -31,18 +38,38 @@ void delOneBDDNode (struct BDDNode *node) {
 	}
 }
 
-int main() {
-	/*
-	printf("hello world\n");
-	struct BDDNode *test = newNullBDDNode(5);
-	printf("%d\n", (test -> v));
-	delOneBDDNode(test);
-	*/
+struct OrientBuffer *createBufferNode(struct Orientation *orient) {
+	struct OrientBuffer *retVal = malloc(sizeof(struct OrientBuffer));
 
-	struct Orientation *orient = createOrientation(10);
-	addEdge(orient, 3, 5);
-	addEdge(orient, 3, 9);
-	printOrientation(orient);
+	retVal -> orient = orient;
+	retVal -> next = NULL;
+	return retVal;
+}
+
+struct OrientBuffer *deleteInitialBufferNode (struct OrientBuffer *buf) {
+	if (buf == NULL)
+		return NULL;
+	struct OrientBuffer *next = buf -> next;
+	deleteOrientation(buf -> orient);
+	free(buf);
+	return next;
+}
+
+void deleteBufferList (struct OrientBuffer *initial) {
+	while(initial != NULL)
+		initial = deleteInitialBufferNode(initial);
+}
+
+int main() {
+	int n = 10;
+
+	struct Orientation *orient = createCompleteGraph(n);
+	struct OrientBuffer *initial = createBufferNode(orient);	
+	deleteEdge(orient, 2, 3);
+	initial -> next = createBufferNode(orient);	
+	deleteBufferList(initial); //TODO: check why i am getting segfault
+
+	//printOrientation(orient);
 
 	return 0;
 }

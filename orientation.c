@@ -3,21 +3,6 @@
 #include <stdlib.h>
 #include "orientation.h"
 
-/*
-struct Node {
-	int v;
-	struct Node *next;
-	bool isOriented;
-};
-
-struct Orientation {
-	int n;			
-	int m;		
-	struct Node **adjList;
-};
-
-*/
-
 struct Node *createNode(int v) {
 	struct Node *newNode = malloc(sizeof(struct Node));
 	newNode -> v = v;
@@ -176,42 +161,26 @@ bool isReachable(struct Orientation *orientation, int src, int dest) {
 	visited = (bool *) malloc(n * sizeof(bool));
 	for (int i = 0; i < n; i++)
 		visited[i] = false;
-	return isReachableAux(orientation, src, dest, visited);
+	bool result = isReachableAux(orientation, src, dest, visited);
+	free(visited);
+	return result;
 }
-/*
-int main (void) {
-	struct Orientation *orientation = createOrientation(10);
 
-	for (int i = 0; i < 6; i++)
-		for(int j = 0; j < 6; j++)
-			if (i < j) 
-				addEdge(orientation, i, j);
+struct Orientation *createCompleteGraph (int n) {
+	struct Orientation *graph = createOrientation(n);
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+			if (i < j)
+				addEdge(graph, i, j);
+	return graph;
+}
 
-	addEdge(orientation, 9, 0);
-
-	printOrientation(orientation);
-	printf("\n--------------------------------\n");
-
-	for (int i = 0; i < 6; i++)
-		for(int j = 0; j < 6; j++)
+struct Orientation *createCompleteOrientation (int n) {
+	struct Orientation *orientation = createCompleteGraph(n);
+	for (int i = 0; i < n; i++)
+		for(int j = 0; j < n; j++)
 			if (i < j) 
 				orientEdge(orientation, i, j);
+	return orientation;
 
-	deleteList(orientation, 2);
-	orientEdge(orientation,9,0);
-	printOrientation(orientation);
-
-	for (int i = 0; i < 10; i++)
-		for (int j = 0; j < 10; j++) {
-			if (i != j) {
-				printf("Is %d reachable from %d?\n", j, i);
-				printf(isReachable(orientation, i, j) ? "yes" : "no");
-				printf("\n");
-			}
-		}
-	
-	deleteOrientation(orientation);
-
-	return 0;
 }
-*/

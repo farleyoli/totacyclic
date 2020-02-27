@@ -37,4 +37,8 @@ bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *vi
 
 bool isReachable(struct Orientation *orientation, int src, int dest);
 
+struct Orientation *createCompleteGraph (int n);
+
+struct Orientation *createCompleteOrientation (int n);
+
 #endif
