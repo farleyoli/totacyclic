@@ -65,9 +65,10 @@ int main() {
 
 	struct Orientation *orient = createCompleteGraph(n);
 	struct OrientBuffer *initial = createBufferNode(orient);	
+	orient = createCompleteGraph(n);
 	deleteEdge(orient, 2, 3);
 	initial -> next = createBufferNode(orient);	
-	deleteBufferList(initial); //TODO: check why i am getting segfault
+	deleteBufferList(initial);
 
 	//printOrientation(orient);
 
