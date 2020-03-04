@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "orientation.h"
 
 struct Node *createNode(int v) {
@@ -155,7 +156,7 @@ bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *vi
 }
 
 bool isReachable(struct Orientation *orientation, int src, int dest) {
-	// TODO: complete
+	// return true iff dest is reachable from src
 	int n = orientation -> n;
 	bool *visited;
 	visited = (bool *) malloc(n * sizeof(bool));
@@ -183,4 +184,21 @@ struct Orientation *createCompleteOrientation (int n) {
 				orientEdge(orientation, i, j);
 	return orientation;
 
+}
+
+bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int* setOfVertices, int length) {
+	// this function assume that the set of oriented edges are the same
+	// (and thus that the elimination front is the same)
+	// it checks if the reachability relation on the set of vertices given is the same
+		
+	for (int i = 0; i < length; i++) {
+		for (int j = i+1; j < length; j++) {
+			if (isReachable(orient1, setOfVertices[i], setOfVertices[j]) != isReachable(orient2, setOfVertices[i], setOfVertices[j])){
+				//printf("The culprit is (%d, %d)\n", i, j);
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
