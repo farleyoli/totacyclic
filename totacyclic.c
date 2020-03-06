@@ -6,9 +6,10 @@
 #include "orientation.h"
 
 struct OrientBuffer {
-	// Buffer containing the orientations for each level of the BDD
+	/* Buffer containing the orientations for each level of the BDD*/
 	struct OrientBuffer *next;
 	struct Orientation *orient;
+	struct BDDNode *node;
 };
 
 struct OrientBuffer *createBufferNode(struct Orientation *orient) {
@@ -16,6 +17,7 @@ struct OrientBuffer *createBufferNode(struct Orientation *orient) {
 
 	retVal -> orient = orient;
 	retVal -> next = NULL;
+	retVal -> node = NULL;
 	return retVal;
 }
 
@@ -33,26 +35,37 @@ void deleteBufferList (struct OrientBuffer *initial) {
 		initial = deleteInitialBufferNode(initial);
 }
 
-void testReachability() {
-	// TODO: add better test with more complicated situation (maybe see paper) 
+void addToBufferList (struct OrientBuffer *buffer, struct Orientation *orient, struct BDDNode *node) {
+	/* TODO: finish this */
+	/* add orientation to the buffer list, as long as the orientation is not already present*/
+	/* returns pointer to BDD node to which "node" should point in case it is already present and NULL otherwise*/
+	while (buffer -> next != NULL) {
+		/*if(areReachRelationsEqual(*/
+	}
+}
 
-	// simple test
+void testReachability() {
+	/* TODO: add better test with more complicated situation (use examples coming from sagemath) */
+
+	/* simple test*/
 	struct Orientation *orient1 = createCompleteGraph(4);
 	orientEdge(orient1, 0, 1);
 	orientEdge(orient1, 0, 2);
 	struct Orientation *orient2 = createCompleteGraph(4);
 	orientEdge(orient2, 1, 0);
 	orientEdge(orient2, 2, 0);
-	int eliminationFront[2] = {1, 2};
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, 2)){
+	int sizeEF;
+	int *eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
 		printf("seems alrighty\n");
 	}
 	else 
 		printf("bad\n");
 	deleteOrientation(orient1);
 	deleteOrientation(orient2);
+	free(eliminationFront);
 
-	// simple test2
+	/* simple test2*/
 	orient1 = createCompleteGraph(4);
 	orient2 = createCompleteGraph(4);
 
@@ -63,16 +76,17 @@ void testReachability() {
 	orientEdge(orient2, 0, 2);
 	orientEdge(orient2, 1, 0);
 	orientEdge(orient2, 1, 3);
-	int eliminationFront2[2] = {2, 3};
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront2, 2)){
+	eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
 		printf("seems alrighty\n");
 	}
 	else 
 		printf("bad\n");
 	deleteOrientation(orient1);
 	deleteOrientation(orient2);
+	free(eliminationFront);
 	
-	// simple test3: this time the ReachRelations are different
+	/* simple test3: this time the ReachRelations are different*/
 	orient1 = createCompleteGraph(4);
 	orient2 = createCompleteGraph(4);
 
@@ -83,14 +97,21 @@ void testReachability() {
 	orientEdge(orient2, 2, 0);
 	orientEdge(orient2, 0, 1);
 	orientEdge(orient2, 1, 3);
-	int eliminationFront3[2] = {2, 3};
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront3, 2)){
+	eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	printOrientation(orient1);
+	printOrientation(orient2);
+	for (int i = 0; i < sizeEF; i++) {
+		printf("%d\n",eliminationFront[i]);
+	}
+
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
 		printf("bad\n");
 	}
 	else 
 		printf("seems alrighty\n");
 	deleteOrientation(orient1);
 	deleteOrientation(orient2);
+	free(eliminationFront);
 }
 
 int main() {
@@ -98,15 +119,8 @@ int main() {
 	/*
 	int n = 10;
 
-	struct Orientation *orient = createCompleteGraph(n);
-	struct OrientBuffer *initial = createBufferNode(orient);
-	struct Orientation *orient2 = createCompleteGraph(n);
-	deleteEdge(orient2, 2, 3);
-	initial -> next = createBufferNode(orient2);
-	//deleteBufferList(initial);
-
-	printOrientation(orient2);
-
+	struct Orientation *orient = createCompleteOrientation(n);
+	printOrientation(orient);
 	*/
 
 	testReachability();

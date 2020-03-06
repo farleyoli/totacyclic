@@ -23,9 +23,9 @@ struct Orientation *createOrientation (int noV) {
 }
 
 void appendNode (struct Node **list, struct Node *node, int v) {
-	// list: adjacency list of the orientation
-	// node: node to be added
-	// v: index for the list
+	/* list: adjacency list of the orientation */
+	/* node: node to be added*/
+	/* v: index for the list*/
 
 	if (list[v] == NULL) {
 		list[v] = node;
@@ -71,8 +71,8 @@ void printOrientation (struct Orientation *orientation) {
 }
 
 void deleteEdge (struct Orientation *orientation, int src, int dest) {
-	// deletes Node dest from list of src
-	// Attention: must run twice (both directions) for undirected
+	/* deletes Node dest from list of src*/
+	/* Attention: must run twice (both directions) for undirected*/
 	struct Node *node, *next, *before;
 
 	if (orientation -> adjList[src] == NULL) {
@@ -100,7 +100,7 @@ void deleteEdge (struct Orientation *orientation, int src, int dest) {
 }
 
 void orientEdge (struct Orientation *orientation, int src, int dest) {
-	// orient from src to dest
+	/* orient from src to dest*/
 	deleteEdge (orientation, dest, src);
 	struct Node *node = orientation -> adjList[src];
 	while(node -> v != dest)
@@ -109,7 +109,7 @@ void orientEdge (struct Orientation *orientation, int src, int dest) {
 }
 
 bool deleteInitialNode (struct Orientation *orientation, int v) {
-	// returns false iff list is empty
+	/* returns false iff list is empty */
 	struct Node *initial = orientation -> adjList[v];
 	if (initial == NULL)
 		return false;
@@ -134,18 +134,18 @@ void deleteOrientation(struct Orientation *orientation) {
 
 bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *visited) {
 	if (visited[src]) {
-		//printf("already visited\n");
+		/*printf("already visited\n"); */
 		return false;
 	}
 	visited[src] = true;
 	struct Node *initial = orientation -> adjList[src];
 	if (initial == NULL) {
-		//printf("initial was null\n");
+		/*printf("initial was null\n");*/
 		return false;
 	}
 	bool result = false;
 	while (initial != NULL) {
-		//printf("until here?\n");
+		/*printf("until here?\n");*/
 		if ((initial -> v == dest) && (initial -> isOriented))
 			return true;
 		if (initial -> isOriented && isReachableAux(orientation, initial -> v, dest, visited))
@@ -156,7 +156,7 @@ bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *vi
 }
 
 bool isReachable(struct Orientation *orientation, int src, int dest) {
-	// return true iff dest is reachable from src
+	/* return true iff dest is reachable from src*/
 	int n = orientation -> n;
 	bool *visited;
 	visited = (bool *) malloc(n * sizeof(bool));
@@ -187,18 +187,58 @@ struct Orientation *createCompleteOrientation (int n) {
 }
 
 bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int* setOfVertices, int length) {
-	// this function assume that the set of oriented edges are the same
-	// (and thus that the elimination front is the same)
-	// it checks if the reachability relation on the set of vertices given is the same
+	/* this function assume that the set of oriented edges are the same*/
+	/* (and thus that the elimination front is the same)*/
+	/* it checks if the reachability relation on the set of vertices given is the same*/
 		
 	for (int i = 0; i < length; i++) {
 		for (int j = i+1; j < length; j++) {
 			if (isReachable(orient1, setOfVertices[i], setOfVertices[j]) != isReachable(orient2, setOfVertices[i], setOfVertices[j])){
-				//printf("The culprit is (%d, %d)\n", i, j);
+				//printf("The culprit is (%d, %d)\n", i, j);*/
 				return false;
 			}
 		}
 	}
 
 	return true;
+}
+
+bool isVertexInEF (struct Orientation *orient, int i) {
+	/* i: vertex under cosideration */
+	bool isThereUnd = false, isThereDir = false;
+	struct Node *p = orient -> adjList[i];
+	if (p == NULL) {
+		return false;
+	}
+	while (p != NULL) {
+		if(p -> isOriented) {
+			isThereDir = true;
+		}
+		else {
+			isThereUnd = true;
+		}
+		p = p -> next;	
+	}
+	return isThereUnd && isThereDir;
+}
+
+int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
+	int n = orient -> n;
+	*sizeEF = 0;
+	int i;
+	for (i = 0; i < n; i++) {
+		if(isVertexInEF(orient, i)) {
+			(*sizeEF)++;
+		}
+	}
+
+	int *retArray = malloc((*sizeEF) * sizeof(int));
+	
+	int j = 0;
+	for (i = 0; i < n; i++) {
+		if(isVertexInEF(orient, i))
+			retArray[j++] = i;
+	}
+		
+	return retArray;
 }
