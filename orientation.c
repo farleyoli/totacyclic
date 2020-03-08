@@ -12,6 +12,7 @@ struct Node *createNode(int v) {
 	return newNode;
 }
 
+
 struct Orientation *createOrientation (int noV) {
 	struct Orientation *orientation = malloc(sizeof(struct Orientation));
 	orientation -> n = noV;
@@ -265,4 +266,38 @@ int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
 
 		
 	return retArray;
+}
+
+struct Node *copyNodeList(struct Node *original) {
+	/* TODO */
+	struct Node *retVal = NULL; 
+	struct Node *trav = NULL;
+
+	if (original == NULL) {
+		return NULL;
+	}
+
+	retVal = createNode(original -> v);
+	retVal -> orientation = original -> orientation;
+	trav = retVal;
+
+	while ( original -> next != NULL ) {
+		original = original -> next;
+		trav -> next = createNode(original -> v);
+		trav = trav -> next;
+		trav -> orientation = original -> orientation;
+	}
+
+	return retVal;
+}
+
+struct Orientation *copyOrientation (struct Orientation *original) {
+	/* TODO */
+	int i;
+	struct Orientation *retVal = createOrientation(original -> n);
+	retVal -> m = original -> m;
+	for (i = 0; i < original -> n; i++) {
+		retVal -> adjList[i] = copyNodeList(original -> adjList[i]);
+	}
+	return retVal;
 }

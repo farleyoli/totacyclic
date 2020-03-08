@@ -81,6 +81,12 @@ int sizeBuffer(struct OrientBuffer *b) {
 	return i;
 }
 
+struct BDDNode *createCycleBDD() {
+	/* TODO: finish this */
+	struct BDDNode *retVal = newNullBDDNode(0);
+	return NULL;
+}
+
 void testReachability() {
 	/* TODO: add better test with more complicated situation (use examples coming from sagemath) */
 
@@ -227,6 +233,18 @@ void testBufferList() {
 	
 }
 
+void testCopy() {
+	struct Orientation *orient = NULL;
+	struct Orientation *orientCopy = NULL;
+	orient = createCycle(5);
+	orientEdge(orient, 2, 1);
+	orientEdge(orient, 3, 2);
+	orientEdge(orient, 3, 4);
+	orientCopy = copyOrientation(orient);
+	printOrientation(orient);
+	printOrientation(orientCopy);
+}
+
 int main() {
 
 	/*
@@ -237,7 +255,8 @@ int main() {
 	*/
 
 	/*testReachability();*/
-	testBufferList();
+	/*testBufferList();*/
+	testCopy();
 
 	return 0;
 }

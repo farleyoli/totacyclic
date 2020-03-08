@@ -48,4 +48,6 @@ bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *or
 
 int *computeEliminationFront(struct Orientation *orient, int *sizeEF);
 
+struct Orientation *copyOrientation (struct Orientation *original);
+
 #endif
