@@ -12,6 +12,15 @@ struct OrientBuffer {
 	struct BDDNode *node;		/* BDD Node to which current orientation corresponds*/
 };
 
+struct OrientBuffer *createEmptyBufferNode() {
+	struct OrientBuffer *retVal = malloc(sizeof(struct OrientBuffer));
+
+	retVal -> orient = NULL;
+	retVal -> next = NULL;
+	retVal -> node = NULL;
+	return retVal;
+}
+
 struct OrientBuffer *createBufferNode(struct Orientation *orient) {
 	struct OrientBuffer *retVal = malloc(sizeof(struct OrientBuffer));
 
@@ -35,30 +44,48 @@ void deleteBufferList (struct OrientBuffer *initial) {
 		initial = deleteInitialBufferNode(initial);
 }
 
-struct BDDNode *addToBufferList (struct OrientBuffer *buffer, struct Orientation *orient, struct BDDNode *node, int *EF, int sizeEF) {
+struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientation *orient, int *EF, int sizeEF, struct BDDNode *bddNode, bool isLo, int V) {
 	/*this function assumes that all elements have the same EF! */
 	/* add orientation to the buffer list, as long as the orientation is not already present*/
 	/* returns pointer to BDD node to which "node" should point in case it is already present and NULL otherwise*/
-
-	if(buffer == NULL) {
-		buffer = createBufferNode(orient);
+	if((*buffer) == NULL) {
+		/* the problem is here */
+		printf("1\n");
+		*buffer = createBufferNode(orient);
+		if (isLo) {
+			bddNode -> lo = newNullBDDNode(V);
+			(*buffer) -> node = bddNode -> lo;
+		} else {
+			bddNode -> hi = newNullBDDNode(V);
+			(*buffer) -> node = bddNode -> hi;
+		}
 		return NULL;
 	}
 
-	struct OrientBuffer *temp = buffer;
+	struct OrientBuffer *temp = *buffer;
 
-	while (temp -> next != NULL) {
+	do {
+		printf("2\n");
 		if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
 			/* no need to add, do some magic and return */
 			return temp -> node;
 		}
-		temp = temp -> next;
-	}
+		if(temp -> next != NULL) {
+			temp = temp -> next; 
+		}
+	} while (temp -> next != NULL);
 
 	/* we add orientation to the BufferList */
+	printf("3\n");
 	struct OrientBuffer *new = createBufferNode(orient);
-	new -> node = node;
 	temp -> next = new;
+	if(isLo) {
+		bddNode -> lo = newNullBDDNode(V);
+		(*buffer) -> node = bddNode -> lo;
+	} else {
+		bddNode -> hi = newNullBDDNode(V);
+		(*buffer) -> node = bddNode -> hi;
+	}
 	return NULL;
 }
 
@@ -68,12 +95,7 @@ int sizeBuffer(struct OrientBuffer *b) {
 		return i;
 	}
 
-	if (b -> next == NULL) {
-		i++;
-		return i;
-	}
-
-	while (b -> next != NULL) {
+	while (b != NULL) {
 		i++;
 		b = b -> next;
 	}
@@ -81,10 +103,96 @@ int sizeBuffer(struct OrientBuffer *b) {
 	return i;
 }
 
-struct BDDNode *createCycleBDD() {
+void printBuffer(struct OrientBuffer *b) {
+	if(b == NULL) {
+		return;
+	}
+
+	while (b != NULL) {
+		printOrientation(b -> orient);
+		b = b -> next;
+	}
+}
+
+struct BDDNode *createCycleBDD(int n) {
 	/* TODO: finish this */
+	/* the order of the vertices is the natural one */
+	int i, j, m, sizeBuf;
+
+	struct Orientation *undir = createCycle(n);
+
+	struct Orientation *tempOr1 = NULL;
+	struct Orientation *tempOr2 = NULL;
+
+	struct OrientBuffer *nextBuffer = createBufferNode(undir);
+	struct OrientBuffer *prevBuffer = nextBuffer;
+	struct OrientBuffer *InitPrevBuffer = NULL;
+
+	m = undir -> m;
+
+	int *EF = NULL;
+	int sizeEF = 0;
+
 	struct BDDNode *retVal = newNullBDDNode(0);
-	return NULL;
+	struct BDDNode *trav = retVal;
+	struct BDDNode *tempBDDNode = NULL;
+	prevBuffer -> node = trav; 
+
+	for (i = 0; i < m; i++) { 
+		/* construct (i+1)-th level from i-th level */
+		nextBuffer = NULL;	/* buffer for (i+1)-th level */
+		sizeBuf = sizeBuffer(prevBuffer);
+		printf("size of buffer = %d\n", sizeBuf);
+		InitPrevBuffer = prevBuffer;
+		for(j = 0; j < sizeBuf; j++) {
+			tempOr1 = copyOrientation(prevBuffer -> orient);
+			trav = prevBuffer -> node;
+			tempOr2 = copyOrientation(tempOr1);
+
+
+			/* lo */
+			orientEdge(tempOr1, i, i+1);
+
+			if(j == 0) {
+				EF = computeEliminationFront(tempOr1, &sizeEF);	
+			}
+
+
+
+			printf("tempOr1 (i = %d, j = %d)\n", i, j);
+			printOrientation(tempOr1);
+
+			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+1);
+
+
+			if (tempBDDNode != NULL) {
+				trav -> lo = tempBDDNode; 
+				free(tempOr1);
+			}
+			
+
+			/* hi */
+			orientEdge(tempOr2, i+1, i);
+
+			printf("tempOr2 (i = %d, j = %d)\n", i, j);
+			printOrientation(tempOr2);
+
+			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+1);
+
+			if(tempBDDNode != NULL) {
+				trav -> hi = tempBDDNode; 
+				free(tempOr2);
+			}
+
+			prevBuffer = prevBuffer -> next;
+		}
+		sizeBuf = sizeBuffer(nextBuffer);
+		prevBuffer = nextBuffer;
+		free(EF);
+		deleteBufferList(InitPrevBuffer);
+		/*printBuffer(prevBuffer);*/
+	}
+	return retVal;
 }
 
 void testReachability() {
@@ -183,47 +291,51 @@ void testBufferList() {
 	/* initialization */
 	EF = computeEliminationFront(orient, &sizeEF);
 
+	/*
+
 	orient = createCycle(5);
 	orientEdge(orient, 1, 2);
 	orientEdge(orient, 2, 3);
 	orientEdge(orient, 4, 3);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 1, 2);
 	orientEdge(orient, 3, 2);
 	orientEdge(orient, 3, 4);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 1, 2);
 	orientEdge(orient, 3, 2);
 	orientEdge(orient, 4, 3);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 2, 1);
 	orientEdge(orient, 2, 3);
 	orientEdge(orient, 3, 4);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 2, 1);
 	orientEdge(orient, 2, 3);
 	orientEdge(orient, 4, 3);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 2, 1);
 	orientEdge(orient, 3, 2);
 	orientEdge(orient, 3, 4);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
 
 	orient = createCycle(5);
 	orientEdge(orient, 2, 1);
 	orientEdge(orient, 3, 2);
 	orientEdge(orient, 4, 3);
-	addToBufferList(buffer, orient, NULL, EF, sizeEF);
+	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+
+	*/
 
 	free(EF);
 
@@ -256,7 +368,9 @@ int main() {
 
 	/*testReachability();*/
 	/*testBufferList();*/
-	testCopy();
+	/*testCopy();*/
+
+	struct BDDNode *bdd = createCycleBDD(4);
 
 	return 0;
 }

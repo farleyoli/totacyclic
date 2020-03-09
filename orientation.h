@@ -44,7 +44,7 @@ struct Orientation *createCycle (int n);
 
 struct Orientation *createCompleteOrientation (int n);
 
-bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int* setOfVertices, int length);
+bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int *setOfVertices, int length);
 
 int *computeEliminationFront(struct Orientation *orient, int *sizeEF);
 

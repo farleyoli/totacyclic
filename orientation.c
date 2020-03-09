@@ -52,6 +52,7 @@ void addEdge (struct Orientation *orientation, int src, int dest) {
 	appendNode(orientation -> adjList, newNode, src);
 	newNode = createNode(src);
 	appendNode(orientation -> adjList, newNode, dest);
+	(orientation -> m)++;
 }
 
 void printOrientation (struct Orientation *orientation) {
@@ -105,12 +106,8 @@ void deleteEdge (struct Orientation *orientation, int src, int dest) {
 	deleteEdgeAux(orientation, src, dest);
 	deleteEdgeAux(orientation, dest, src);
 }
-
-void orientEdge (struct Orientation *orientation, int src, int dest) {
-	/* orient from src to dest*/
-	struct Node *node = orientation -> adjList[src];
-	while(node -> v != dest)
-		node = node -> next;
+void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient from src to dest*/ struct Node *node = orientation -> adjList[src];
+	while(node -> v != dest) node = node -> next;
 	node -> orientation = 1;
 
 
@@ -235,7 +232,7 @@ bool isVertexInEF (struct Orientation *orient, int i) {
 		return false;
 	}
 	while (p != NULL) {
-		if((p -> orientation == 1) || (p-> orientation == -1)) {
+		if((p -> orientation == 1) || (p -> orientation == -1)) {
 			isThereDir = true;
 		}
 		else {
@@ -248,6 +245,7 @@ bool isVertexInEF (struct Orientation *orient, int i) {
 
 int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
 	int n = orient -> n;
+	int *retArray;
 	*sizeEF = 0;
 	int i;
 	for (i = 0; i < n; i++) {
@@ -256,20 +254,24 @@ int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
 		}
 	}
 
-	int *retArray = malloc((*sizeEF) * sizeof(int));
+	retArray = (int *) malloc(sizeof(int) * (*sizeEF));
+
+	if(retArray == NULL) {
+		printf("BAD\n");
+		return NULL;
+	}
 	
 	int j = 0;
 	for (i = 0; i < n; i++) {
-		if(isVertexInEF(orient, i))
+		if(isVertexInEF(orient, i)) {
 			retArray[j++] = i;
+		}
 	}
 
-		
 	return retArray;
 }
 
 struct Node *copyNodeList(struct Node *original) {
-	/* TODO */
 	struct Node *retVal = NULL; 
 	struct Node *trav = NULL;
 
@@ -292,7 +294,6 @@ struct Node *copyNodeList(struct Node *original) {
 }
 
 struct Orientation *copyOrientation (struct Orientation *original) {
-	/* TODO */
 	int i;
 	struct Orientation *retVal = createOrientation(original -> n);
 	retVal -> m = original -> m;
