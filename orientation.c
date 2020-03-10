@@ -166,7 +166,9 @@ bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *vi
 }
 
 bool isReachable(struct Orientation *orientation, int src, int dest) {
-	/* return true iff dest is reachable from src*/
+	/* Returns true iff dest is reachable from src
+	 * in partial orientation.
+	 * Assumes that src is different from dest. */
 	int n = orientation -> n;
 	bool *visited;
 	visited = (bool *) malloc(n * sizeof(bool));
@@ -307,4 +309,49 @@ struct Orientation *copyOrientation (struct Orientation *original) {
 		retVal -> adjList[i] = copyNodeList(original -> adjList[i]);
 	}
 	return retVal;
+}
+
+bool isStronglyConnected(struct Orientation *orient) {
+	//TODO (probably use DFS?)
+	// assumes that the orientation is a digraph
+	// returns true if and only if the digraph is strongly connected
+	
+	return true;
+}
+
+bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, bool *visited) {
+	if (visited[src] && src != i) {
+		/*printf("already visited\n"); */
+		return false;
+	}
+	visited[src] = true;
+	struct Node *initial = orient -> adjList[src];
+	if (initial == NULL) {
+		/*printf("initial was null\n");*/
+		return false;
+	}
+	bool result = false;
+	while (initial != NULL) {
+		/*printf("until here?\n");*/
+		if ((initial -> v == dest) && (initial -> orientation == 1))
+			return true;
+		if ((initial -> orientation == 1) && isSelfReachableAux(orient, initial -> v, dest, i, visited))
+			result = true;
+		initial = initial -> next;
+	}
+	return result;
+}
+
+bool isSelfReachable (struct Orientation *orient, int i) {
+	//TODO
+	//assumes that orient is a digraph
+	//returns true if and only if vertex i can reach itself
+	int n = orient -> n;
+	bool *visited;
+	visited = (bool *) malloc(n * sizeof(bool));
+	for (int i = 0; i < n; i++)
+		visited[i] = false;
+	bool result = isSelfReachableAux(orient, i, i, i, visited);
+	free(visited);
+	return result;
 }

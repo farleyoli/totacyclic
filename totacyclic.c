@@ -116,7 +116,7 @@ void printBuffer(struct OrientBuffer *b) {
 	}
 }
 
-struct BDDNode *createCycleBDD(int n) {
+struct BDDNode *createBDD(int n) {
 	/* TODO: finish this */
 	/* the order of the vertices is the natural one */
 	int i, inext, j, m, sizeBuf;
@@ -160,6 +160,37 @@ struct BDDNode *createCycleBDD(int n) {
 
 		InitPrevBuffer = prevBuffer;
 
+		if (isLast) {
+			// the processing is different for the last
+			// ((m-1)-th to m-th) level
+			for(j = 0; j < sizeBuf; j++) {
+				tempOr1 = copyOrientation(prevBuffer -> orient);
+				trav = prevBuffer -> node;
+				tempOr2 = copyOrientation(tempOr1);
+				orientEdge(tempOr1, i, inext);
+				orientEdge(tempOr2, inext, i);
+				struct BDDNode *T = newNullBDDNode(i+1);
+				struct BDDNode *F = newNullBDDNode(i+1);
+
+				if (isSelfReachable(tempOr1, 0)) {
+					// (e.g.), link to 0-node		
+					prevBuffer -> node -> lo = F;
+				} else {
+					prevBuffer -> node -> lo = T;
+				}
+				if (isSelfReachable(tempOr2, 0)) {
+					prevBuffer -> node -> hi = F;
+				} else {
+					prevBuffer -> node -> hi = T;
+				}
+				prevBuffer = prevBuffer -> next;
+			}
+			//sizeBuf = sizeBuffer(nextBuffer);
+			prevBuffer = nextBuffer;
+			deleteBufferList(InitPrevBuffer);
+			break;
+		}
+
 
 		for(j = 0; j < sizeBuf; j++) {
 			tempOr1 = copyOrientation(prevBuffer -> orient);
@@ -167,23 +198,16 @@ struct BDDNode *createCycleBDD(int n) {
 			tempOr2 = copyOrientation(tempOr1);
 
 
-			printf("debug\n");fflush(stdout);
 			/* lo */
 			orientEdge(tempOr1, i, inext);
-
-
 			if(j == 0) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
-
-
-
 			printf("tempOr1 (i = %d, j = %d)\n", i, j);
 			printOrientation(tempOr1);
 			printf("trav->v=%d\n",trav->v);
 
 	
-			// problem is "trav"
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+1);
 
 			printf("!trav->v=%d\n",trav->v);
@@ -215,7 +239,6 @@ struct BDDNode *createCycleBDD(int n) {
 		prevBuffer = nextBuffer;
 		free(EF);
 		deleteBufferList(InitPrevBuffer);
-		/*printBuffer(prevBuffer);*/
 	}
 	sizeBuf = sizeBuffer(prevBuffer);
 	printf("final------------------------------\n");
@@ -400,7 +423,9 @@ int main() {
 	/*testBufferList();*/
 	/*testCopy();*/
 
-	struct BDDNode *bdd = createCycleBDD(4);
+	struct BDDNode *bdd = createBDD(7);
+
+	printf("size of BDD: %d\n", sizeOfBDD(bdd));
 
 	return 0;
 }

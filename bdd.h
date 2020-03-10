@@ -11,4 +11,6 @@ struct BDDNode *newNullBDDNode (int v);
 
 void delOneBDDNode (struct BDDNode *node);
 
+int sizeOfBDD (struct BDDNode *node);
+
 #endif

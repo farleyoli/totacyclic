@@ -34,8 +34,6 @@ void deleteList (struct Orientation *orientation, int v);
 
 void deleteOrientation(struct Orientation *orientation);
 
-bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *visited);
-
 bool isReachable(struct Orientation *orientation, int src, int dest);
 
 struct Orientation *createCompleteGraph (int n);
@@ -50,4 +48,7 @@ int *computeEliminationFront(struct Orientation *orient, int *sizeEF);
 
 struct Orientation *copyOrientation (struct Orientation *original);
 
+bool isStronglyConnected(struct Orientation *orient);
+
+bool isSelfReachable (struct Orientation *orient, int i);
 #endif

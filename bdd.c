@@ -27,3 +27,14 @@ void delOneBDDNode (struct BDDNode *node) {
 		free (node);
 	}
 }
+
+int sizeOfBDD (struct BDDNode *node) {
+	// This function returns the number of nodes of the BDD
+	// headed by "node".
+	if(node == NULL)
+		return 0;
+	int result = 1;
+	result += sizeOfBDD(node -> hi);
+	result += sizeOfBDD(node -> lo);
+	return result;
+}
