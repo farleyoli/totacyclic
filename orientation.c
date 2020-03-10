@@ -58,6 +58,7 @@ void addEdge (struct Orientation *orientation, int src, int dest) {
 void printOrientation (struct Orientation *orientation) {
 	int v;
 	struct Node *temp;
+	printf("------\n");
 	for (v = 0; v < orientation -> n; v++) {
 		temp = orientation -> adjList[v];
 		printf("\n Adjacency list of vertex %d\n ", v);
@@ -69,7 +70,7 @@ void printOrientation (struct Orientation *orientation) {
 		}
 		printf("\n");
 	}
-
+	printf("------\n");
 }
 
 void deleteEdgeAux (struct Orientation *orientation, int src, int dest) {
@@ -211,11 +212,11 @@ bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *or
 	for (i = 0; i < length; i++) {
 		for (j = i+1; j < length; j++) {
 			if (isReachable(orient1, setOfVertices[i], setOfVertices[j]) != isReachable(orient2, setOfVertices[i], setOfVertices[j])){
-				/*printf("The culprit is (%d, %d)\n", i, j);*/
+				printf("The culprit is (%d, %d)\n", i, j);
 				return false;
 			}
 			if (isReachable(orient1, setOfVertices[j], setOfVertices[i]) != isReachable(orient2, setOfVertices[j], setOfVertices[i])){
-				/*printf("The culprit is (%d, %d)\n", i, j);*/
+				printf("The culprit is (%d, %d)\n", i, j);
 				return false;
 			}
 		}
@@ -252,6 +253,11 @@ int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
 		if(isVertexInEF(orient, i)) {
 			(*sizeEF)++;
 		}
+	}
+
+	if((*sizeEF) == 0) {
+		printf("the size of the elimination front is 0\n");
+		return NULL;
 	}
 
 	retArray = (int *) malloc(sizeof(int) * (*sizeEF));

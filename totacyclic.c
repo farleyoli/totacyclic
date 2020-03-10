@@ -49,7 +49,6 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 	/* add orientation to the buffer list, as long as the orientation is not already present*/
 	/* returns pointer to BDD node to which "node" should point in case it is already present and NULL otherwise*/
 	if((*buffer) == NULL) {
-		/* the problem is here */
 		printf("1\n");
 		*buffer = createBufferNode(orient);
 		if (isLo) {
@@ -68,12 +67,15 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 		printf("2\n");
 		if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
 			/* no need to add, do some magic and return */
-			return temp -> node;
+			return temp->node;
 		}
 		if(temp -> next != NULL) {
 			temp = temp -> next; 
 		}
 	} while (temp -> next != NULL);
+	if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
+		return temp->node;
+	}
 
 	/* we add orientation to the BufferList */
 	printf("3\n");
@@ -81,10 +83,10 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 	temp -> next = new;
 	if(isLo) {
 		bddNode -> lo = newNullBDDNode(V);
-		(*buffer) -> node = bddNode -> lo;
+		(temp -> next) -> node = bddNode -> lo;
 	} else {
 		bddNode -> hi = newNullBDDNode(V);
-		(*buffer) -> node = bddNode -> hi;
+		(temp -> next) -> node = bddNode -> hi;
 	}
 	return NULL;
 }
@@ -117,7 +119,8 @@ void printBuffer(struct OrientBuffer *b) {
 struct BDDNode *createCycleBDD(int n) {
 	/* TODO: finish this */
 	/* the order of the vertices is the natural one */
-	int i, j, m, sizeBuf;
+	int i, inext, j, m, sizeBuf;
+	bool isLast = false;
 
 	struct Orientation *undir = createCycle(n);
 
@@ -140,18 +143,34 @@ struct BDDNode *createCycleBDD(int n) {
 
 	for (i = 0; i < m; i++) { 
 		/* construct (i+1)-th level from i-th level */
+
+		if (i < m-1) {
+			inext = i+1;
+		} else {
+			inext = 0;
+			isLast = true;
+		}
+
 		nextBuffer = NULL;	/* buffer for (i+1)-th level */
 		sizeBuf = sizeBuffer(prevBuffer);
-		printf("size of buffer = %d\n", sizeBuf);
+		printf("i------------------------------\n");
+		printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
+		printBuffer(prevBuffer);
+		printf("f------------------------------\n");
+
 		InitPrevBuffer = prevBuffer;
+
+
 		for(j = 0; j < sizeBuf; j++) {
 			tempOr1 = copyOrientation(prevBuffer -> orient);
 			trav = prevBuffer -> node;
 			tempOr2 = copyOrientation(tempOr1);
 
 
+			printf("debug\n");fflush(stdout);
 			/* lo */
-			orientEdge(tempOr1, i, i+1);
+			orientEdge(tempOr1, i, inext);
+
 
 			if(j == 0) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
@@ -161,9 +180,13 @@ struct BDDNode *createCycleBDD(int n) {
 
 			printf("tempOr1 (i = %d, j = %d)\n", i, j);
 			printOrientation(tempOr1);
+			printf("trav->v=%d\n",trav->v);
 
+	
+			// problem is "trav"
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+1);
 
+			printf("!trav->v=%d\n",trav->v);
 
 			if (tempBDDNode != NULL) {
 				trav -> lo = tempBDDNode; 
@@ -172,12 +195,14 @@ struct BDDNode *createCycleBDD(int n) {
 			
 
 			/* hi */
-			orientEdge(tempOr2, i+1, i);
+			orientEdge(tempOr2, inext, i);
 
 			printf("tempOr2 (i = %d, j = %d)\n", i, j);
 			printOrientation(tempOr2);
+			printf("trav->v=%d\n",trav->v);
 
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+1);
+			printf("!trav->v=%d\n",trav->v);
 
 			if(tempBDDNode != NULL) {
 				trav -> hi = tempBDDNode; 
@@ -192,6 +217,11 @@ struct BDDNode *createCycleBDD(int n) {
 		deleteBufferList(InitPrevBuffer);
 		/*printBuffer(prevBuffer);*/
 	}
+	sizeBuf = sizeBuffer(prevBuffer);
+	printf("final------------------------------\n");
+	printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
+	printBuffer(prevBuffer);
+	printf("final------------------------------\n");
 	return retVal;
 }
 

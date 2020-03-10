@@ -1,0 +1,508 @@
+i------------------------------
+Buffer (size = 1, i = 0):
+------
+
+ Adjacency list of vertex 0
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (0) -> 2 (0) -> 
+
+ Adjacency list of vertex 2
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+f------------------------------
+debug
+tempOr1 (i = 0, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (0) -> 
+
+ Adjacency list of vertex 2
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=0
+1
+!trav->v=0
+tempOr2 (i = 0, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (0) -> 
+
+ Adjacency list of vertex 2
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=0
+2
+The culprit is (0, 1)
+The culprit is (0, 1)
+3
+!trav->v=0
+i------------------------------
+Buffer (size = 2, i = 1):
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (0) -> 
+
+ Adjacency list of vertex 2
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (0) -> 
+
+ Adjacency list of vertex 2
+ 1 (0) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+f------------------------------
+debug
+tempOr1 (i = 1, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=1
+1
+!trav->v=1
+tempOr2 (i = 1, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=1
+2
+The culprit is (0, 1)
+The culprit is (0, 1)
+3
+!trav->v=1
+debug
+tempOr1 (i = 1, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=1
+2
+The culprit is (0, 1)
+!trav->v=1
+tempOr2 (i = 1, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+trav->v=1
+2
+The culprit is (0, 1)
+The culprit is (0, 1)
+3
+!trav->v=1
+i------------------------------
+Buffer (size = 3, i = 2):
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 3
+ 2 (0) -> 0 (0) -> 
+------
+f------------------------------
+debug
+tempOr1 (i = 2, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (0) -> 
+------
+trav->v=2
+1
+!trav->v=2
+tempOr2 (i = 2, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (0) -> 
+------
+trav->v=2
+2
+The culprit is (0, 1)
+The culprit is (0, 1)
+3
+!trav->v=2
+debug
+tempOr1 (i = 2, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (0) -> 
+------
+trav->v=2
+2
+The culprit is (0, 1)
+!trav->v=2
+tempOr2 (i = 2, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (0) -> 
+------
+trav->v=2
+2
+The culprit is (0, 1)
+!trav->v=2
+debug
+tempOr1 (i = 2, j = 2)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (0) -> 
+------
+trav->v=2
+2
+The culprit is (0, 1)
+!trav->v=2
+tempOr2 (i = 2, j = 2)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (0) -> 
+------
+trav->v=2
+2
+The culprit is (0, 1)
+The culprit is (0, 1)
+3
+!trav->v=2
+i------------------------------
+Buffer (size = 3, i = 3):
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (0) -> 
+------
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (0) -> 
+------
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (0) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (0) -> 
+------
+f------------------------------
+debug
+the size of the elimination front is 0
+tempOr1 (i = 3, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (1) -> 
+------
+trav->v=3
+1
+!trav->v=3
+tempOr2 (i = 3, j = 0)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (1) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (-1) -> 
+------
+trav->v=3
+2
+!trav->v=3
+debug
+tempOr1 (i = 3, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (1) -> 
+------
+trav->v=3
+2
+!trav->v=3
+tempOr2 (i = 3, j = 1)
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (1) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (-1) -> 
+------
+trav->v=3
+2
+!trav->v=3
+debug
+tempOr1 (i = 3, j = 2)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (1) -> 
+------
+trav->v=3
+2
+!trav->v=3
+tempOr2 (i = 3, j = 2)
+------
+
+ Adjacency list of vertex 0
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 1
+ 0 (1) -> 2 (-1) -> 
+
+ Adjacency list of vertex 2
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 3
+ 2 (1) -> 0 (-1) -> 
+------
+trav->v=3
+2
+!trav->v=3
+final------------------------------
+Buffer (size = 1, i = 4):
+------
+
+ Adjacency list of vertex 0
+ 1 (1) -> 3 (-1) -> 
+
+ Adjacency list of vertex 1
+ 0 (-1) -> 2 (1) -> 
+
+ Adjacency list of vertex 2
+ 1 (-1) -> 3 (1) -> 
+
+ Adjacency list of vertex 3
+ 2 (-1) -> 0 (1) -> 
+------
+final------------------------------
