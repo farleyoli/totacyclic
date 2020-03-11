@@ -116,18 +116,23 @@ void printBuffer(struct OrientBuffer *b) {
 	}
 }
 
-struct BDDNode *createBDD(int n) {
+
+struct BDDNode *createBDD(struct Orientation *undir) {
 	/* TODO: finish this */
 	/* the order of the vertices is the natural one */
 	int i, inext, j, m, sizeBuf;
 	bool isLast = false;
-	struct Orientation *undir = createCycle(n);
 	struct Orientation *tempOr1 = NULL;
 	struct Orientation *tempOr2 = NULL;
 	struct OrientBuffer *nextBuffer = createBufferNode(undir);
 	struct OrientBuffer *prevBuffer = nextBuffer;
 	struct OrientBuffer *InitPrevBuffer = NULL;
 	m = undir -> m;
+
+	int *u = malloc(m * sizeof(int));
+	int *v = malloc(m * sizeof(int));
+	computeLexOrder(u, v, undir);
+
 	int *EF = NULL;
 	int sizeEF = 0;
 	struct BDDNode *retVal = newNullBDDNode(1);
@@ -141,13 +146,6 @@ struct BDDNode *createBDD(int n) {
 		/* construct (i+1)-th level from i-th level */
 		printf("%d/%d\n", i, m);
 
-		if (i < m-1) {
-			inext = i+1;
-		} else {
-			inext = 0;
-			isLast = true;
-		}
-
 		nextBuffer = NULL;	/* buffer for (i+1)-th level */
 		sizeBuf = sizeBuffer(prevBuffer);
 		//printf("i------------------------------\n");
@@ -157,16 +155,15 @@ struct BDDNode *createBDD(int n) {
 
 		InitPrevBuffer = prevBuffer;
 
-		if (isLast) {
+		if (i == m-1) {
 			// the processing is different for the last
 			// ((m-1)-th to m-th) level
 			for(j = 0; j < sizeBuf; j++) {
 				tempOr1 = copyOrientation(prevBuffer -> orient);
 				trav = prevBuffer -> node;
 				tempOr2 = copyOrientation(tempOr1);
-				orientEdge(tempOr1, i, inext);
-				orientEdge(tempOr2, inext, i);
-
+				orientEdge(tempOr1, u[i], v[i]);
+				orientEdge(tempOr2, v[i], u[i]);
 				if (isSelfReachable(tempOr1, 0)) {
 					prevBuffer -> node -> lo = F;
 				} else {
@@ -193,7 +190,7 @@ struct BDDNode *createBDD(int n) {
 
 
 			/* lo */
-			orientEdge(tempOr1, i, inext);
+			orientEdge(tempOr1, u[i], v[i]);
 			if(j == 0) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
@@ -213,7 +210,7 @@ struct BDDNode *createBDD(int n) {
 			
 
 			/* hi */
-			orientEdge(tempOr2, inext, i);
+			orientEdge(tempOr2, v[i], u[i]);
 
 			//printf("tempOr2 (i = %d, j = %d)\n", i, j);
 			//printOrientation(tempOr2);
@@ -234,92 +231,29 @@ struct BDDNode *createBDD(int n) {
 		free(EF);
 		deleteBufferList(InitPrevBuffer);
 	}
-	sizeBuf = sizeBuffer(prevBuffer);
+	//sizeBuf = sizeBuffer(prevBuffer);
 	//printf("final------------------------------\n");
 	//printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
 	//printBuffer(prevBuffer);
 	//printf("final------------------------------\n");
+	free(u);
+	free(v);
 	return retVal;
 }
 
-void testReachability() {
-	/* TODO: add better test with more complicated situation (use examples coming from sagemath) */
-
-	/* simple test 1*/
-	struct Orientation *orient1 = createCompleteGraph(4);
-	struct Orientation *orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
-
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 0, 2);
-	orientEdge(orient2, 1, 0);
-	orientEdge(orient2, 2, 0);
-
-	int sizeEF;
-	int *eliminationFront = computeEliminationFront(orient1, &sizeEF);
-
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
-		printf("seems alrighty\n");
-	}
-	else 
-		printf("bad\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
-	free(eliminationFront);
-
-	/* simple test2*/
-	orient1 = createCompleteGraph(4);
-	orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
-
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 2, 0);
-	orientEdge(orient1, 3, 1);
-	orientEdge(orient2, 0, 2);
-	orientEdge(orient2, 1, 0);
-	orientEdge(orient2, 1, 3);
-
-	eliminationFront = computeEliminationFront(orient1, &sizeEF);
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
-		printf("seems alrighty\n");
-	}
-	else 
-		printf("bad\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
-	free(eliminationFront);
-	
-	/* simple test3: this time the ReachRelations are different*/
-	orient1 = createCompleteGraph(4);
-	orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
-
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 2, 0);
-	orientEdge(orient1, 3, 1);
-
-	orientEdge(orient2, 2, 0);
-	orientEdge(orient2, 0, 1);
-	orientEdge(orient2, 1, 3);
-	eliminationFront = computeEliminationFront(orient1, &sizeEF);
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
-		printf("bad\n");
-	}
-	else 
-		printf("seems alrighty\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
-	free(eliminationFront);
+struct BDDNode *createCycleBDD(int n) {
+	struct Orientation *undir = createCycle(n);
+	struct BDDNode *retVal = createBDD(undir);
+	deleteOrientation(undir);
+	return retVal;
 }
+
+struct BDDNode *createCompleteBDD(int n) {
+	struct Orientation *undir = createCompleteGraph(n);
+	struct BDDNode *retVal = createBDD(undir);
+	return retVal;
+}
+
 
 void testBufferList() {
 	/* say test all the permutations of (1,2), (2,3) and (3,4) */
@@ -392,53 +326,19 @@ void testBufferList() {
 	
 }
 
-void testCopy() {
-	struct Orientation *orient = NULL;
-	struct Orientation *orientCopy = NULL;
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 3, 4);
-	orientCopy = copyOrientation(orient);
-	printOrientation(orient);
-	printOrientation(orientCopy);
-}
 
-void testStack(struct BDDNode *bdd) {
-	struct TOStack *s = constructTOStack(bdd);	
-	int n = s->n;
-	printf("Total number of nodes is %d.\n", n);
-	printf("The sequence of levels is:\n");
-	for(int i = 0; i < n; i++) {
-		//printf("i = %d.\n", i);fflush(stdout);
-		printf("%d ", s->nodeArray[i].bdd->v);
-	}
-	printf("\n");
-	int length = 0;
-	int *profile;
-	profile = computeProfile(s, &length);
-	printf("The profile of the BDD is (length = %d):\n", length);
-	for(int i = 0; i < length; i++) {
-		printf("%d ", profile[i]);
-	}
-}
+
 
 int main() {
 
-	/*
-	int n = 10;
+	//int n = 10;
 
-	struct Orientation *orient = createCompleteOrientation(n);
-	printOrientation(orient);
-	*/
+	//struct Orientation *orient = createCompleteGraph(n);
+	//printOrientation(orient);
 
-	/*testReachability();*/
-	/*testBufferList();*/
-	/*testCopy();*/
-
-	struct BDDNode *bdd = createBDD(500);
-
+	struct BDDNode *bdd = createCompleteBDD(8);
 	testStack(bdd);
+	//testEdgeOrder();
 
 	return 0;
 }

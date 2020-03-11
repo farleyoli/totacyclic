@@ -355,3 +355,143 @@ bool isSelfReachable (struct Orientation *orient, int i) {
 	free(visited);
 	return result;
 }
+
+void computeLexOrder (int *u, int *v, struct Orientation *undir) {
+	// This function receives an undirected (connected) graph, and
+	// returns the lexicographical order of the edges in the form
+	// of two int arrays u and v (i.e. #i-th edge = (u[i],v[i])).
+	// It assumes memory has already been allocated to u and v.
+	struct Orientation *o = copyOrientation(undir);
+	int n = o -> n;
+	int m = o -> m;
+	int counter = 0;
+	int next = -1;
+	bool isFirst;
+	struct Node *p;
+	for(int i = 0; i < n; i++) {
+		isFirst = true;
+		if(o ->adjList[i] == NULL) {
+			printf("Error! Graph is not connected!");
+			return;
+		}
+		p = o -> adjList[i];
+		while(p != NULL) {
+			if(isFirst && p->orientation == 0) {
+				isFirst = false;
+				next = p->v;
+			}
+			if(p->orientation==0) {
+				orientEdge(o, i, p->v);
+				u[counter] = i;
+				v[counter++] = p->v;
+			}
+			p = p -> next;
+		}
+	}
+	deleteOrientation(o);
+}
+
+void testEdgeOrder() {
+	struct Orientation *o = createCompleteGraph(6);
+	int m = o->m;
+	int *u = malloc(m * sizeof(int));
+	int *v = malloc(m * sizeof(int));
+	computeLexOrder(u, v, o);
+	for(int i = 0; i < m; i++) {
+		printf("(u[%d],v[%d]) = (%d, %d)\n", i, i, u[i], v[i]);
+	}
+
+	free(u);
+	free(v);
+}
+
+void testCopy() {
+	struct Orientation *orient = NULL;
+	struct Orientation *orientCopy = NULL;
+	orient = createCycle(5);
+	orientEdge(orient, 2, 1);
+	orientEdge(orient, 3, 2);
+	orientEdge(orient, 3, 4);
+	orientCopy = copyOrientation(orient);
+	printOrientation(orient);
+	printOrientation(orientCopy);
+}
+
+void testReachability() {
+	/* TODO: add better test with more complicated situation (use examples coming from sagemath) */
+
+	/* simple test 1*/
+	struct Orientation *orient1 = createCompleteGraph(4);
+	struct Orientation *orient2 = createCompleteGraph(4);
+	deleteEdge(orient1, 0, 3);
+	deleteEdge(orient1, 1, 2);
+	deleteEdge(orient2, 0, 3);
+	deleteEdge(orient2, 1, 2);
+
+	orientEdge(orient1, 0, 1);
+	orientEdge(orient1, 0, 2);
+	orientEdge(orient2, 1, 0);
+	orientEdge(orient2, 2, 0);
+
+	int sizeEF;
+	int *eliminationFront = computeEliminationFront(orient1, &sizeEF);
+
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+		printf("seems alrighty\n");
+	}
+	else 
+		printf("bad\n");
+	deleteOrientation(orient1);
+	deleteOrientation(orient2);
+	free(eliminationFront);
+
+	/* simple test2*/
+	orient1 = createCompleteGraph(4);
+	orient2 = createCompleteGraph(4);
+	deleteEdge(orient1, 0, 3);
+	deleteEdge(orient1, 1, 2);
+	deleteEdge(orient2, 0, 3);
+	deleteEdge(orient2, 1, 2);
+
+	orientEdge(orient1, 0, 1);
+	orientEdge(orient1, 2, 0);
+	orientEdge(orient1, 3, 1);
+	orientEdge(orient2, 0, 2);
+	orientEdge(orient2, 1, 0);
+	orientEdge(orient2, 1, 3);
+
+	eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+		printf("seems alrighty\n");
+	}
+	else 
+		printf("bad\n");
+	deleteOrientation(orient1);
+	deleteOrientation(orient2);
+	free(eliminationFront);
+	
+	/* simple test3: this time the ReachRelations are different*/
+	orient1 = createCompleteGraph(4);
+	orient2 = createCompleteGraph(4);
+	deleteEdge(orient1, 0, 3);
+	deleteEdge(orient1, 1, 2);
+	deleteEdge(orient2, 0, 3);
+	deleteEdge(orient2, 1, 2);
+
+	orientEdge(orient1, 0, 1);
+	orientEdge(orient1, 2, 0);
+	orientEdge(orient1, 3, 1);
+
+	orientEdge(orient2, 2, 0);
+	orientEdge(orient2, 0, 1);
+	orientEdge(orient2, 1, 3);
+	eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+		printf("bad\n");
+	}
+	else 
+		printf("seems alrighty\n");
+	deleteOrientation(orient1);
+	deleteOrientation(orient2);
+	free(eliminationFront);
+}

@@ -51,4 +51,13 @@ struct Orientation *copyOrientation (struct Orientation *original);
 bool isStronglyConnected(struct Orientation *orient);
 
 bool isSelfReachable (struct Orientation *orient, int i);
+
+void computeLexOrder (int *u, int *v, struct Orientation *undir);
+
+void testEdgeOrder();
+
+void testCopy();
+
+void testReachability();
+
 #endif

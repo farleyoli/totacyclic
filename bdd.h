@@ -31,4 +31,6 @@ int sizeOfBDD (struct BDDNode *node);
 struct TOStack *constructTOStack (struct BDDNode *bdd);
 
 int *computeProfile(struct TOStack *s, int *length);
+
+void testStack(struct BDDNode *bdd);
 #endif

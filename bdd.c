@@ -156,3 +156,21 @@ int *computeProfile(struct TOStack *s, int *length) {
 	
 	return retVal;
 }
+
+void testStack(struct BDDNode *bdd) {
+	struct TOStack *s = constructTOStack(bdd);	
+	int n = s->n;
+	printf("Total number of nodes is %d.\n", n);
+	//printf("The sequence of levels is:\n");
+	for(int i = 0; i < n; i++) {
+		//printf("%d ", s->nodeArray[i].bdd->v);
+	}
+	printf("\n");
+	int length = 0;
+	int *profile;
+	profile = computeProfile(s, &length);
+	printf("The profile of the BDD is (length = %d):\n", length);
+	for(int i = 0; i < length; i++) {
+		printf("%d ", profile[i]);
+	}
+}
