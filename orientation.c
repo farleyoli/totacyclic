@@ -391,6 +391,16 @@ void computeLexOrder (int *u, int *v, struct Orientation *undir) {
 	deleteOrientation(o);
 }
 
+bool isCyclic(struct Orientation *o, int v) {
+	// This function is given a partial orientation o,
+	// a vertex adjacent to the edge that has just been
+	// oriented, and returns whether there is a cycle
+	// containing v (i.e. whether the orientation is cyclic
+	// if we use it throughout the whole BDD construction
+	// process).
+	return isSelfReachable(o, v);	
+}
+
 void testEdgeOrder() {
 	struct Orientation *o = createCompleteGraph(6);
 	int m = o->m;

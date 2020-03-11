@@ -81,6 +81,7 @@ struct TONode createTONode (struct BDDNode *bdd) {
 
 void constructTOStackAux (struct BDDNode *bdd, struct TOStack *s) {
 	bdd -> isVisited = true;
+	printf("v = %d\n", bdd->v);
 	struct TONode e = createTONode(bdd);
 	addTOStack(s, e);
 	if ((bdd->lo != NULL) && !(bdd -> lo -> isVisited)) {
@@ -128,6 +129,7 @@ int *computeProfile(struct TOStack *s, int *length) {
 	//The variable "length" represents the length of the
 	//return value.
 
+
 	// find depth of BDD
 	int max = -2;
 	for(int i = 0; i < s->n; i++) {
@@ -136,23 +138,26 @@ int *computeProfile(struct TOStack *s, int *length) {
 		}
 	}
 
+
 	max += 1; //level of T and F BDDNodes
 
 	// allocate memory for retVal
-	int *retVal = malloc(max * sizeof(int));
-	for(int i = 0; i < s->n; i++) {
+	int *retVal = (int *) calloc(max, sizeof(int));
+	for(int i = 0; i < (s->n); i++) {
 		retVal[i] = 0;
 	}
 
-	for(int i = 0; i < s->n; i++) {
+	for(int i = 0; i < (s->n); i++) {
 		if(s->nodeArray[i].bdd->v == -1) {
 			retVal[max-1]++;
 			continue;
 		}
+		//printf("%d, ", s->nodeArray[i].bdd->v);
 		retVal[(s->nodeArray[i].bdd->v)-1]++;
 	}	
 
 	*length = max;
+
 	
 	return retVal;
 }
@@ -161,11 +166,11 @@ void testStack(struct BDDNode *bdd) {
 	struct TOStack *s = constructTOStack(bdd);	
 	int n = s->n;
 	printf("Total number of nodes is %d.\n", n);
-	//printf("The sequence of levels is:\n");
-	for(int i = 0; i < n; i++) {
-		//printf("%d ", s->nodeArray[i].bdd->v);
-	}
-	printf("\n");
+//	printf("The sequence of levels is:\n");
+//	for(int i = 0; i < n; i++) {
+//		printf("%d ", s->nodeArray[i].bdd->v);
+//	}
+//	printf("\n");
 	int length = 0;
 	int *profile;
 	profile = computeProfile(s, &length);

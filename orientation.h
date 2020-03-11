@@ -60,4 +60,6 @@ void testCopy();
 
 void testReachability();
 
+bool isCyclic(struct Orientation *o, int v);
+
 #endif

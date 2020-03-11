@@ -165,13 +165,17 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				orientEdge(tempOr1, u[i], v[i]);
 				orientEdge(tempOr2, v[i], u[i]);
 				if (isSelfReachable(tempOr1, 0)) {
+					printf("hue1\n");
 					prevBuffer -> node -> lo = F;
 				} else {
+					printf("hue2\n");
 					prevBuffer -> node -> lo = T;
 				}
 				if (isSelfReachable(tempOr2, 0)) {
+					printf("hue3\n");
 					prevBuffer -> node -> hi = F;
 				} else {
+					printf("hue4\n");
 					prevBuffer -> node -> hi = T;
 				}
 				prevBuffer = prevBuffer -> next;
@@ -191,33 +195,38 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 			/* lo */
 			orientEdge(tempOr1, u[i], v[i]);
+			if (isCyclic(tempOr1, u[i])) {
+				trav->lo = F;	
+				free(tempOr1);
+				goto label_hi;
+			}
+
 			if(j == 0) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
-			//printf("tempOr1 (i = %d, j = %d)\n", i, j);
-			//printOrientation(tempOr1);
-			//printf("trav->v=%d\n",trav->v);
 
 	
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
 
-			//printf("!trav->v=%d\n",trav->v);
 
 			if (tempBDDNode != NULL) {
 				trav -> lo = tempBDDNode; 
 				free(tempOr1);
 			}
 			
-
+			label_hi:
 			/* hi */
 			orientEdge(tempOr2, v[i], u[i]);
 
-			//printf("tempOr2 (i = %d, j = %d)\n", i, j);
-			//printOrientation(tempOr2);
-			//printf("trav->v=%d\n",trav->v);
+			if (isCyclic(tempOr2, u[i])) {
+				trav->hi = F;
+				free(tempOr2);
+				prevBuffer = prevBuffer -> next;
+				continue;
+			}
+
 
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
-			//printf("!trav->v=%d\n",trav->v);
 
 			if(tempBDDNode != NULL) {
 				trav -> hi = tempBDDNode; 
@@ -244,7 +253,6 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 struct BDDNode *createCycleBDD(int n) {
 	struct Orientation *undir = createCycle(n);
 	struct BDDNode *retVal = createBDD(undir);
-	deleteOrientation(undir);
 	return retVal;
 }
 
@@ -336,7 +344,7 @@ int main() {
 	//struct Orientation *orient = createCompleteGraph(n);
 	//printOrientation(orient);
 
-	struct BDDNode *bdd = createCompleteBDD(8);
+	struct BDDNode *bdd = createCompleteBDD(9);
 	testStack(bdd);
 	//testEdgeOrder();
 
