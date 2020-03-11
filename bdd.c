@@ -32,7 +32,7 @@ void addTOStack (struct TOStack *s, struct TONode e) {
 	// add e to s
 	const int INITIAL_LENGTH = 30;
 	if (s -> nodeArray == NULL) {
-		printf("debug1\n");fflush(stdout);
+		//printf("debug1\n");fflush(stdout);
 		s -> n = 0;
 		s -> nodeArray = malloc(sizeof(struct TONode) * INITIAL_LENGTH);
 		s -> nodeArray[(s -> n)++] = e;
@@ -42,7 +42,7 @@ void addTOStack (struct TOStack *s, struct TONode e) {
 
 	if (s -> n == s -> l) {
 		// resize	
-		printf("debug2\n");fflush(stdout);
+		//printf("debug2\n");fflush(stdout);
 		struct TONode *temp = s -> nodeArray;
 		s -> l = 2 * (s -> l);
 		s -> nodeArray = malloc(sizeof(struct TONode) * (s -> l));
@@ -57,8 +57,8 @@ void addTOStack (struct TOStack *s, struct TONode e) {
 	}
 
 		
-	printf("debug3\n");fflush(stdout);
-	printf("s->n = %d\n", s->n); fflush(stdout);
+	//printf("debug3\n");fflush(stdout);
+	//printf("s->n = %d\n", s->n); fflush(stdout);
 	s -> nodeArray[(s -> n)++] = e;
 }
 
@@ -120,4 +120,39 @@ int sizeOfBDD (struct BDDNode *node) {
 	result += sizeOfBDD(node -> hi);
 	result += sizeOfBDD(node -> lo);
 	return result;
+}
+
+int *computeProfile(struct TOStack *s, int *length) {
+	//Receives a stack representing a certain BDD and
+	//returns an array with the profile of this BDD.
+	//The variable "length" represents the length of the
+	//return value.
+
+	// find depth of BDD
+	int max = -2;
+	for(int i = 0; i < s->n; i++) {
+		if((s->nodeArray[i].bdd->v) > max) {
+			max = s->nodeArray[i].bdd->v;
+		}
+	}
+
+	max += 1; //level of T and F BDDNodes
+
+	// allocate memory for retVal
+	int *retVal = malloc(max * sizeof(int));
+	for(int i = 0; i < s->n; i++) {
+		retVal[i] = 0;
+	}
+
+	for(int i = 0; i < s->n; i++) {
+		if(s->nodeArray[i].bdd->v == -1) {
+			retVal[max-1]++;
+			continue;
+		}
+		retVal[(s->nodeArray[i].bdd->v)-1]++;
+	}	
+
+	*length = max;
+	
+	return retVal;
 }

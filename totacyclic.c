@@ -49,7 +49,7 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 	/* add orientation to the buffer list, as long as the orientation is not already present*/
 	/* returns pointer to BDD node to which "node" should point in case it is already present and NULL otherwise*/
 	if((*buffer) == NULL) {
-		printf("1\n");
+		//printf("1\n");
 		*buffer = createBufferNode(orient);
 		if (isLo) {
 			bddNode -> lo = newNullBDDNode(V);
@@ -64,7 +64,7 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 	struct OrientBuffer *temp = *buffer;
 
 	do {
-		printf("2\n");
+		//printf("2\n");
 		if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
 			/* no need to add, do some magic and return */
 			return temp->node;
@@ -78,7 +78,7 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 	}
 
 	/* we add orientation to the BufferList */
-	printf("3\n");
+	//printf("3\n");
 	struct OrientBuffer *new = createBufferNode(orient);
 	temp -> next = new;
 	if(isLo) {
@@ -139,6 +139,7 @@ struct BDDNode *createBDD(int n) {
 
 	for (i = 0; i < m; i++) { 
 		/* construct (i+1)-th level from i-th level */
+		printf("%d/%d\n", i, m);
 
 		if (i < m-1) {
 			inext = i+1;
@@ -149,10 +150,10 @@ struct BDDNode *createBDD(int n) {
 
 		nextBuffer = NULL;	/* buffer for (i+1)-th level */
 		sizeBuf = sizeBuffer(prevBuffer);
-		printf("i------------------------------\n");
-		printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
-		printBuffer(prevBuffer);
-		printf("f------------------------------\n");
+		//printf("i------------------------------\n");
+		//printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
+		//printBuffer(prevBuffer);
+		//printf("f------------------------------\n");
 
 		InitPrevBuffer = prevBuffer;
 
@@ -196,14 +197,14 @@ struct BDDNode *createBDD(int n) {
 			if(j == 0) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
-			printf("tempOr1 (i = %d, j = %d)\n", i, j);
-			printOrientation(tempOr1);
-			printf("trav->v=%d\n",trav->v);
+			//printf("tempOr1 (i = %d, j = %d)\n", i, j);
+			//printOrientation(tempOr1);
+			//printf("trav->v=%d\n",trav->v);
 
 	
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
 
-			printf("!trav->v=%d\n",trav->v);
+			//printf("!trav->v=%d\n",trav->v);
 
 			if (tempBDDNode != NULL) {
 				trav -> lo = tempBDDNode; 
@@ -214,12 +215,12 @@ struct BDDNode *createBDD(int n) {
 			/* hi */
 			orientEdge(tempOr2, inext, i);
 
-			printf("tempOr2 (i = %d, j = %d)\n", i, j);
-			printOrientation(tempOr2);
-			printf("trav->v=%d\n",trav->v);
+			//printf("tempOr2 (i = %d, j = %d)\n", i, j);
+			//printOrientation(tempOr2);
+			//printf("trav->v=%d\n",trav->v);
 
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
-			printf("!trav->v=%d\n",trav->v);
+			//printf("!trav->v=%d\n",trav->v);
 
 			if(tempBDDNode != NULL) {
 				trav -> hi = tempBDDNode; 
@@ -234,10 +235,10 @@ struct BDDNode *createBDD(int n) {
 		deleteBufferList(InitPrevBuffer);
 	}
 	sizeBuf = sizeBuffer(prevBuffer);
-	printf("final------------------------------\n");
-	printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
-	printBuffer(prevBuffer);
-	printf("final------------------------------\n");
+	//printf("final------------------------------\n");
+	//printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
+	//printBuffer(prevBuffer);
+	//printf("final------------------------------\n");
 	return retVal;
 }
 
@@ -407,9 +408,18 @@ void testStack(struct BDDNode *bdd) {
 	struct TOStack *s = constructTOStack(bdd);	
 	int n = s->n;
 	printf("Total number of nodes is %d.\n", n);
+	printf("The sequence of levels is:\n");
 	for(int i = 0; i < n; i++) {
 		//printf("i = %d.\n", i);fflush(stdout);
 		printf("%d ", s->nodeArray[i].bdd->v);
+	}
+	printf("\n");
+	int length = 0;
+	int *profile;
+	profile = computeProfile(s, &length);
+	printf("The profile of the BDD is (length = %d):\n", length);
+	for(int i = 0; i < length; i++) {
+		printf("%d ", profile[i]);
 	}
 }
 
@@ -426,7 +436,7 @@ int main() {
 	/*testBufferList();*/
 	/*testCopy();*/
 
-	struct BDDNode *bdd = createBDD(100);
+	struct BDDNode *bdd = createBDD(500);
 
 	testStack(bdd);
 
