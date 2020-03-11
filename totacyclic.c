@@ -408,6 +408,7 @@ void testStack(struct BDDNode *bdd) {
 	int n = s->n;
 	printf("Total number of nodes is %d.\n", n);
 	for(int i = 0; i < n; i++) {
+		//printf("i = %d.\n", i);fflush(stdout);
 		printf("%d ", s->nodeArray[i].bdd->v);
 	}
 }
@@ -425,7 +426,7 @@ int main() {
 	/*testBufferList();*/
 	/*testCopy();*/
 
-	struct BDDNode *bdd = createBDD(4);
+	struct BDDNode *bdd = createBDD(100);
 
 	testStack(bdd);
 

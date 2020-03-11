@@ -41,12 +41,18 @@ void addTOStack (struct TOStack *s, struct TONode e) {
 	}
 
 	if (s -> n == s -> l) {
-		printf("debug2\n");fflush(stdout);
 		// resize	
-		free (s -> nodeArray);
+		printf("debug2\n");fflush(stdout);
+		struct TONode *temp = s -> nodeArray;
 		s -> l = 2 * (s -> l);
 		s -> nodeArray = malloc(sizeof(struct TONode) * (s -> l));
+
+		for (int j = 0; j < s->n; j++) {
+			s -> nodeArray[j] = temp[j];	
+		}
+
 		s -> nodeArray[(s -> n)++] = e;
+		free (temp);
 		return;
 	}
 
