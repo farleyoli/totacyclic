@@ -121,25 +121,21 @@ struct BDDNode *createBDD(int n) {
 	/* the order of the vertices is the natural one */
 	int i, inext, j, m, sizeBuf;
 	bool isLast = false;
-
 	struct Orientation *undir = createCycle(n);
-
 	struct Orientation *tempOr1 = NULL;
 	struct Orientation *tempOr2 = NULL;
-
 	struct OrientBuffer *nextBuffer = createBufferNode(undir);
 	struct OrientBuffer *prevBuffer = nextBuffer;
 	struct OrientBuffer *InitPrevBuffer = NULL;
-
 	m = undir -> m;
-
 	int *EF = NULL;
 	int sizeEF = 0;
-
-	struct BDDNode *retVal = newNullBDDNode(0);
+	struct BDDNode *retVal = newNullBDDNode(1);
 	struct BDDNode *trav = retVal;
 	struct BDDNode *tempBDDNode = NULL;
 	prevBuffer -> node = trav; 
+	struct BDDNode *T = newNullBDDNode(-1);
+	struct BDDNode *F = newNullBDDNode(-1);
 
 	for (i = 0; i < m; i++) { 
 		/* construct (i+1)-th level from i-th level */
@@ -169,11 +165,8 @@ struct BDDNode *createBDD(int n) {
 				tempOr2 = copyOrientation(tempOr1);
 				orientEdge(tempOr1, i, inext);
 				orientEdge(tempOr2, inext, i);
-				struct BDDNode *T = newNullBDDNode(i+1);
-				struct BDDNode *F = newNullBDDNode(i+1);
 
 				if (isSelfReachable(tempOr1, 0)) {
-					// (e.g.), link to 0-node		
 					prevBuffer -> node -> lo = F;
 				} else {
 					prevBuffer -> node -> lo = T;
@@ -208,7 +201,7 @@ struct BDDNode *createBDD(int n) {
 			printf("trav->v=%d\n",trav->v);
 
 	
-			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+1);
+			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
 
 			printf("!trav->v=%d\n",trav->v);
 
@@ -225,7 +218,7 @@ struct BDDNode *createBDD(int n) {
 			printOrientation(tempOr2);
 			printf("trav->v=%d\n",trav->v);
 
-			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+1);
+			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
 			printf("!trav->v=%d\n",trav->v);
 
 			if(tempBDDNode != NULL) {
@@ -410,6 +403,15 @@ void testCopy() {
 	printOrientation(orientCopy);
 }
 
+void testStack(struct BDDNode *bdd) {
+	struct TOStack *s = constructTOStack(bdd);	
+	int n = s->n;
+	printf("Total number of nodes is %d.\n", n);
+	for(int i = 0; i < n; i++) {
+		printf("%d ", s->nodeArray[i].bdd->v);
+	}
+}
+
 int main() {
 
 	/*
@@ -423,9 +425,9 @@ int main() {
 	/*testBufferList();*/
 	/*testCopy();*/
 
-	struct BDDNode *bdd = createBDD(7);
+	struct BDDNode *bdd = createBDD(4);
 
-	printf("size of BDD: %d\n", sizeOfBDD(bdd));
+	testStack(bdd);
 
 	return 0;
 }
