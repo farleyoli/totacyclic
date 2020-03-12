@@ -1,0 +1,38 @@
+Total number of nodes is 8.
+The profile of the BDD is (length = 4):
+1 2 3 2 ⏎                           
+
+Total number of nodes is 29.
+The profile of the BDD is (length = 7):
+1 2 4 7 10 3 2 ⏎                    
+
+Total number of nodes is 114.
+The profile of the BDD is (length = 11):
+1 2 4 7 15 22 32 13 12 3 2 ⏎        
+
+
+Total number of nodes is 477.
+The profile of the BDD is (length = 16):
+1 2 4 8 14 31 46 68 100 51 60 60 13 12 3 2 ⏎                            
+
+
+Total number of nodes is 2102.
+The profile of the BDD is (length = 22):
+1 2 4 8 16 32 63 94 140 208 308 181 228 276 297 75 72 64 13 12 3 2 ⏎    
+
+
+Total number of nodes is 9765.
+The profile of the BDD is (length = 29):
+1 2 4 8 16 32 64 127 190 284 424 632 940 603 780 996 1236 1428 421 456 460 415 75 72 64 13 12 3 2 ⏎         
+
+
+Total number of nodes is 47778.
+The profile of the BDD is (length = 37):
+1 2 4 8 16 32 64 128 255 382 572 856 1280 1912 2795 1933 2532 3300 4260 5388 6476 2163 2484 2783 2952 2859 541 528 496 432 75 71 64 13 12 3 2 ⏎ > 
+
+
+------------------
+(15, 0.25)
+Total number of nodes is 7553.
+The profile of the BDD is (length = 22):
+1 1 2 4 8 8 16 31 62 93 93 186 372 744 1296 2019 2009 519 59 15 3 2

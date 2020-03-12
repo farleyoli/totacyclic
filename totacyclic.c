@@ -165,17 +165,17 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				orientEdge(tempOr1, u[i], v[i]);
 				orientEdge(tempOr2, v[i], u[i]);
 				if (isSelfReachable(tempOr1, 0)) {
-					printf("hue1\n");
+					//printf("hue1\n");
 					prevBuffer -> node -> lo = F;
 				} else {
-					printf("hue2\n");
+					//printf("hue2\n");
 					prevBuffer -> node -> lo = T;
 				}
 				if (isSelfReachable(tempOr2, 0)) {
-					printf("hue3\n");
+					//printf("hue3\n");
 					prevBuffer -> node -> hi = F;
 				} else {
-					printf("hue4\n");
+					//printf("hue4\n");
 					prevBuffer -> node -> hi = T;
 				}
 				prevBuffer = prevBuffer -> next;
@@ -263,6 +263,13 @@ struct BDDNode *createCompleteBDD(int n) {
 }
 
 
+struct BDDNode *createERBDD(int n, double p) {
+	struct Orientation *undir = createErdosRenyi(n, p) ;
+	struct BDDNode *retVal = createBDD(undir);
+	return retVal;
+}
+
+
 void testBufferList() {
 	/* say test all the permutations of (1,2), (2,3) and (3,4) */
 	/* there should be three elements, because there are only 2 elements in the elimination front */
@@ -344,7 +351,8 @@ int main() {
 	//struct Orientation *orient = createCompleteGraph(n);
 	//printOrientation(orient);
 
-	struct BDDNode *bdd = createCompleteBDD(9);
+	//struct BDDNode *bdd = createCompleteBDD(9);
+	struct BDDNode *bdd = createERBDD(15, 0.25);
 	testStack(bdd);
 	//testEdgeOrder();
 

@@ -401,6 +401,27 @@ bool isCyclic(struct Orientation *o, int v) {
 	return isSelfReachable(o, v);	
 }
 
+struct Orientation *createErdosRenyi (int n, double p) {
+	struct Orientation *orientation = malloc(sizeof(struct Orientation));
+	float r;
+
+	orientation -> n = n;
+	orientation -> adjList = malloc(n * sizeof(struct Node *));
+	for (int i = 0; i < n; i++) {
+		orientation -> adjList[i] = NULL;
+	}
+	
+	for (int i = 0; i < n; i++) {
+		for (int j = i+1; j < n; j++) {
+			r = (rand()/(double)RAND_MAX);
+			if( r < p ) {
+				addEdge(orientation, i, j);
+			}
+		}
+	}
+	return orientation;
+}
+
 void testEdgeOrder() {
 	struct Orientation *o = createCompleteGraph(6);
 	int m = o->m;

@@ -62,4 +62,6 @@ void testReachability();
 
 bool isCyclic(struct Orientation *o, int v);
 
+struct Orientation *createErdosRenyi (int n, double p);
+
 #endif

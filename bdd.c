@@ -81,7 +81,7 @@ struct TONode createTONode (struct BDDNode *bdd) {
 
 void constructTOStackAux (struct BDDNode *bdd, struct TOStack *s) {
 	bdd -> isVisited = true;
-	printf("v = %d\n", bdd->v);
+	//printf("v = %d\n", bdd->v);
 	struct TONode e = createTONode(bdd);
 	addTOStack(s, e);
 	if ((bdd->lo != NULL) && !(bdd -> lo -> isVisited)) {
