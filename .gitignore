@@ -1,4 +1,5 @@
 /target
+signals_crash_logs/
 .ccls-cache/
 *.o
 main

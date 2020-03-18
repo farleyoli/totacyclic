@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "bdd.h"
 #include "orientation.h"
@@ -345,14 +346,16 @@ void testBufferList() {
 
 
 int main() {
+	srand(time(0));
 
 	//int n = 10;
 
 	//struct Orientation *orient = createCompleteGraph(n);
 	//printOrientation(orient);
 
-	//struct BDDNode *bdd = createCompleteBDD(9);
-	struct BDDNode *bdd = createERBDD(15, 0.25);
+	struct BDDNode *bdd = createCompleteBDD(6);
+	//struct BDDNode *bdd = createERBDD(12, 0.35);
+	//struct BDDNode *bdd = createCycleBDD(1000);
 	testStack(bdd);
 	//testEdgeOrder();
 
