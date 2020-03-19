@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #include "bdd.h"
 #include "orientation.h"
@@ -121,14 +122,14 @@ void printBuffer(struct OrientBuffer *b) {
 struct BDDNode *createBDD(struct Orientation *undir) {
 	/* TODO: finish this */
 	/* the order of the vertices is the natural one */
-	int i, inext, j, m, sizeBuf;
-	bool isLast = false;
+	int i, j, m, sizeBuf;
 	struct Orientation *tempOr1 = NULL;
 	struct Orientation *tempOr2 = NULL;
 	struct OrientBuffer *nextBuffer = createBufferNode(undir);
 	struct OrientBuffer *prevBuffer = nextBuffer;
 	struct OrientBuffer *InitPrevBuffer = NULL;
 	m = undir -> m;
+	printf("m = %d\n", m);
 
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
@@ -196,7 +197,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 			/* lo */
 			orientEdge(tempOr1, u[i], v[i]);
-			if (isCyclic(tempOr1, u[i])) {
+			if (i > 1 && isCyclic(tempOr1, u[i])) {
 				trav->lo = F;	
 				free(tempOr1);
 				goto label_hi;
@@ -219,7 +220,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 			/* hi */
 			orientEdge(tempOr2, v[i], u[i]);
 
-			if (isCyclic(tempOr2, u[i])) {
+			if ( i > 1 && isCyclic(tempOr2, u[i])) {
 				trav->hi = F;
 				free(tempOr2);
 				prevBuffer = prevBuffer -> next;
@@ -353,11 +354,29 @@ int main() {
 	//struct Orientation *orient = createCompleteGraph(n);
 	//printOrientation(orient);
 
-	struct BDDNode *bdd = createCompleteBDD(6);
 	//struct BDDNode *bdd = createERBDD(12, 0.35);
 	//struct BDDNode *bdd = createCycleBDD(1000);
-	testStack(bdd);
 	//testEdgeOrder();
 
+
+	
+	struct Orientation *orient;
+	char fileNameBase[] = "graphs/";
+	char fileNameEnding[] = ".txt";
+	char fileName[256] = "";
+	char num[32] = "";
+	struct BDDNode *bdd;
+	int i = 14;
+	//for(int i = 0; i < 10; i++) {
+		sprintf(num, "%d", i+1);
+		strcat(fileName, fileNameBase);
+		strcat(fileName, num);
+		strcat(fileName, fileNameEnding);
+		orient = importFromFile(fileName);
+		bdd = createBDD(orient);
+		// TODO: fix memory related to Stack
+		testStack(bdd);
+		memset(fileName, 0, sizeof(fileName));
+	//}
 	return 0;
 }

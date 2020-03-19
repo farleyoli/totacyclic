@@ -42,7 +42,7 @@ def get_path_decomp(h):
 
 
 it = 0
-while(it < 100):
+while(it < 1000):
     # Generate input graph.
     b = 23
     n = randrange(b, b+10)
@@ -53,7 +53,7 @@ while(it < 100):
     pw, L = path_decomposition(g, algorithm = "BAB")
     h = linear_ordering_to_path_decomposition(g, L)
     #print("pw = " + str(pw))
-    if(pw > 5):
+    if(pw > 5 or (not g.is_connected())):
         continue
     it = it+1
     print(it)

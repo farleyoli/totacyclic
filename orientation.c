@@ -5,7 +5,7 @@
 #include "orientation.h"
 
 struct Node *createNode(int v) {
-	struct Node *newNode = malloc(sizeof(struct Node));
+	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
 	newNode -> v = v;
 	newNode -> next = NULL;
 	newNode -> orientation = 0;
@@ -16,6 +16,7 @@ struct Node *createNode(int v) {
 struct Orientation *createOrientation (int noV) {
 	struct Orientation *orientation = malloc(sizeof(struct Orientation));
 	orientation -> n = noV;
+	orientation -> m = 0;
 	orientation -> adjList = malloc(noV * sizeof(struct Node *));
 	for (int i = 0; i < noV; i++) {
 		orientation -> adjList[i] = NULL;
@@ -343,7 +344,6 @@ bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, b
 }
 
 bool isSelfReachable (struct Orientation *orient, int i) {
-	//TODO
 	//assumes that orient is a digraph
 	//returns true if and only if vertex i can reach itself
 	int n = orient -> n;
@@ -363,7 +363,6 @@ void computeLexOrder (int *u, int *v, struct Orientation *undir) {
 	// It assumes memory has already been allocated to u and v.
 	struct Orientation *o = copyOrientation(undir);
 	int n = o -> n;
-	int m = o -> m;
 	int counter = 0;
 	int next = -1;
 	bool isFirst;
@@ -449,7 +448,6 @@ void testCopy() {
 }
 
 void testReachability() {
-	/* TODO: add better test with more complicated situation (use examples coming from sagemath) */
 
 	/* simple test 1*/
 	struct Orientation *orient1 = createCompleteGraph(4);
@@ -525,4 +523,94 @@ void testReachability() {
 	deleteOrientation(orient1);
 	deleteOrientation(orient2);
 	free(eliminationFront);
+}
+
+struct Orientation *importFromFile (char *fileName) {
+	//TODO
+	FILE *p;
+	char line[256];
+	int n = -1; // number of vertices
+	int i, j;
+	p = fopen(fileName, "r");
+	if(p == NULL) {
+		printf("File does not exist.\n");
+		exit(1);
+	}
+	// First traversal, get number of nodes.
+	while (fgets(line, sizeof(line), p)) {
+		sscanf(line, "%d %d {}", &i, &j);
+		if (i + 1 > n) {
+			n = i+1;
+		}
+		if (j + 1 > n) {
+			n = j+1;
+		}
+	}
+	rewind(p);
+	struct Orientation *retVal = createOrientation(n);
+	// Second traversal, add edges.
+	while (fgets(line, sizeof(line), p)) {
+		sscanf(line, "%d %d {}", &i, &j);
+		addEdge(retVal, i, j);
+	}
+	fclose(p);
+	return retVal;
+}
+
+void deleteOrientedEdges (struct Orientation *orientation, int v) {
+	/* returns false iff list is empty */
+	struct Node *p = orientation -> adjList[v]; //pointer
+	struct Node *d = p; // to be deleted
+	if (p == NULL) {
+		return;
+	}
+	if(p -> next == NULL) {
+		orientation -> adjList[v] = p -> next;
+		free(p);
+		return;
+	}
+
+	// Initial nodes.
+	while(p -> orientation == -1 || p->orientation == 1) {
+		d = p;
+		orientation -> adjList[v] = p -> next;
+		p = p -> next;
+		free(d);
+	}
+
+	// Intermediate nodes.
+	while(p -> next != NULL) {
+		if(p -> next -> orientation == -1 || p->next->orientation == 1) {
+			d = p->next;
+			p->next = p->next->next;
+			free(d);
+		}
+	}
+	
+}
+
+struct Orientation *getReachabilityOrientation (struct Orientation *original, int* EF, int sizeEF) {
+	// Returns orientation where oriented edges have been substituted
+	// for one oriented edge representing each related pair of vertices
+	// in the elimination front
+	int i, j;
+	struct Orientation *retVal = copyOrientation(original);
+	for (i = 0; i < original -> n; i++) {
+		deleteOrientedEdges(retVal, i);
+	}
+
+	for (i = 0; i < sizeEF; i++) {
+		for(j = 0; j < sizeEF; j++) {
+			if(i == j) {
+				continue;
+			}
+			if(isReachable(original, i, j)) {
+				addEdge(retVal, i, j);
+				orientEdge(retVal, i, j);
+			}
+
+		}
+	}
+
+	return retVal;
 }

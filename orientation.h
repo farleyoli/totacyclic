@@ -42,6 +42,8 @@ struct Orientation *createCycle (int n);
 
 struct Orientation *createCompleteOrientation (int n);
 
+struct Orientation *importFromFile (char *fileName);
+
 bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int *setOfVertices, int length);
 
 int *computeEliminationFront(struct Orientation *orient, int *sizeEF);
@@ -63,5 +65,7 @@ void testReachability();
 bool isCyclic(struct Orientation *o, int v);
 
 struct Orientation *createErdosRenyi (int n, double p);
+
+struct Orientation *getReachabilityOrientation (struct Orientation *original, int* EF, int sizeEF);
 
 #endif

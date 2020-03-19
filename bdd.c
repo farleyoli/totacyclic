@@ -178,4 +178,5 @@ void testStack(struct BDDNode *bdd) {
 	for(int i = 0; i < length; i++) {
 		printf("%d ", profile[i]);
 	}
+	printf("\n");
 }
