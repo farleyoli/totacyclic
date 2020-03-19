@@ -125,6 +125,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 	int i, j, m, sizeBuf;
 	struct Orientation *tempOr1 = NULL;
 	struct Orientation *tempOr2 = NULL;
+	struct Orientation *temp = NULL;
 	struct OrientBuffer *nextBuffer = createBufferNode(undir);
 	struct OrientBuffer *prevBuffer = nextBuffer;
 	struct OrientBuffer *InitPrevBuffer = NULL;
@@ -207,7 +208,15 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
 
-	
+			if(sizeEF > 3) {
+				//printf("Orientation before: \n");
+				//printOrientation(tempOr1);
+				temp = tempOr1;	
+				tempOr1 = getReachabilityOrientation(tempOr1, EF, sizeEF);
+				deleteOrientation(temp);
+				//printf("Orientation after: \n");
+				//printOrientation(tempOr1);
+			}
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
 
 
@@ -227,6 +236,15 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				continue;
 			}
 
+			if(sizeEF > 3) {
+				//printf("Orientation before:\n");
+				//printOrientation(tempOr2);
+				temp = tempOr2;	
+				tempOr2 = getReachabilityOrientation(tempOr2, EF, sizeEF);
+				deleteOrientation(temp);
+				//printf("Orientation after:\n");
+				//printOrientation(tempOr2);
+			}
 
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
 
@@ -238,6 +256,12 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 			prevBuffer = prevBuffer -> next;
 		}
 		sizeBuf = sizeBuffer(nextBuffer);
+		/*
+		if (sizeBuf == 1) {
+			printf("Buffer for i = %d\n\n", i);
+			printBuffer(nextBuffer);
+		}
+		*/
 		prevBuffer = nextBuffer;
 		free(EF);
 		deleteBufferList(InitPrevBuffer);
@@ -366,13 +390,14 @@ int main() {
 	char fileName[256] = "";
 	char num[32] = "";
 	struct BDDNode *bdd;
-	int i = 14;
+	int i = 10;
 	//for(int i = 0; i < 10; i++) {
 		sprintf(num, "%d", i+1);
 		strcat(fileName, fileNameBase);
 		strcat(fileName, num);
 		strcat(fileName, fileNameEnding);
 		orient = importFromFile(fileName);
+		//orient = createCompleteGraph(12);
 		bdd = createBDD(orient);
 		// TODO: fix memory related to Stack
 		testStack(bdd);

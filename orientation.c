@@ -397,6 +397,8 @@ bool isCyclic(struct Orientation *o, int v) {
 	// containing v (i.e. whether the orientation is cyclic
 	// if we use it throughout the whole BDD construction
 	// process).
+	if(o->adjList[v] == NULL)
+		return false;
 	return isSelfReachable(o, v);	
 }
 
@@ -576,6 +578,9 @@ void deleteOrientedEdges (struct Orientation *orientation, int v) {
 		orientation -> adjList[v] = p -> next;
 		p = p -> next;
 		free(d);
+		if(p == NULL) {
+			return;
+		}
 	}
 
 	// Intermediate nodes.
@@ -584,6 +589,9 @@ void deleteOrientedEdges (struct Orientation *orientation, int v) {
 			d = p->next;
 			p->next = p->next->next;
 			free(d);
+
+		} else { // do not delete
+			p = p -> next;
 		}
 	}
 	
@@ -595,6 +603,9 @@ struct Orientation *getReachabilityOrientation (struct Orientation *original, in
 	// in the elimination front
 	int i, j;
 	struct Orientation *retVal = copyOrientation(original);
+	return retVal;
+	//printf("before (size EF) = %d\n", sizeEF);
+	//printOrientation(retVal);
 	for (i = 0; i < original -> n; i++) {
 		deleteOrientedEdges(retVal, i);
 	}
@@ -602,15 +613,29 @@ struct Orientation *getReachabilityOrientation (struct Orientation *original, in
 	for (i = 0; i < sizeEF; i++) {
 		for(j = 0; j < sizeEF; j++) {
 			if(i == j) {
+				if(isSelfReachable(original, EF[i])) {
+					printf("hey hey\n\n");
+					addEdge(retVal, EF[i], EF[i]);
+					orientEdge(retVal, EF[i], EF[i]);
+				}
 				continue;
 			}
-			if(isReachable(original, i, j)) {
-				addEdge(retVal, i, j);
-				orientEdge(retVal, i, j);
+			if(isReachable(original, EF[i], EF[j])) {
+				addEdge(retVal, EF[i], EF[j]);
+				orientEdge(retVal, EF[i], EF[j]);
 			}
 
 		}
 	}
+	//printf("after\n");
+	//printOrientation(retVal);
+	
+	if(!areReachRelationsEqual(original, retVal, EF, sizeEF)) {
+		printf("Not equal!\n");
+		printOrientation(original);
+		printOrientation(retVal);
+	}
+	
 
 	return retVal;
 }
