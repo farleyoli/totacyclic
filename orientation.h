@@ -12,6 +12,16 @@ struct Orientation {
 	int n;			/* number of vertices */
 	int m;			/* number of edges */	
 	struct Node **adjList;	/* list of vertices */
+	int sizeEF;		/* Size of the elimination front. */
+	int** reachFrom;	/* For each element of the EF, from which
+				   other elements is it reachable? */
+	int** reachTo;		/* For each element of the EF, elements
+				   to which it is reachable. */
+	int* EF;		// Elimination front. OBS: We will _always_ 
+				// force the EF to be sorted in increasing order.
+
+	// reachFrom[i] and reachTo[i] all have size "sizeEF",
+	// and reachFrom[i][j] = -1 iff j is not an element of reachFrom[i].
 };
 
 struct Node *createNode(int v);

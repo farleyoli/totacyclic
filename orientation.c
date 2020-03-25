@@ -21,6 +21,10 @@ struct Orientation *createOrientation (int noV) {
 	for (int i = 0; i < noV; i++) {
 		orientation -> adjList[i] = NULL;
 	}
+	orientation -> sizeEF = -1;
+	orientation -> reachTo  = NULL;
+	orientation -> reachFrom = NULL;
+	orientation -> EF = NULL;
 	return orientation;
 }
 
@@ -108,7 +112,53 @@ void deleteEdge (struct Orientation *orientation, int src, int dest) {
 	deleteEdgeAux(orientation, src, dest);
 	deleteEdgeAux(orientation, dest, src);
 }
+
+bool isAdjacentToDirectedEdge(struct Orientation *orient, int v) {
+	// TODO
+	// Returns true iff v is adjacent to some oriented edge.
+	struct Node *p = orient->adjList[v]; 
+	while(p != NULL) {
+		if(p->orientation == 1 || p->orientation == -1) {
+			return true;
+		}
+		p = p->next;
+	}
+	return false;
+}
+
+bool isAdjacentToUndirectedEdge(struct Orientation *orient, int v) {
+	// TODO
+	// Returns true iff v is adjacent to some undirected edge.
+	struct Node *p = orient->adjList[v]; 
+	while(p != NULL) {
+		if(p->orientation == 0) {
+			return true;
+		}
+		p = p->next;
+	}
+	return false;
+}
+
 void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient from src to dest*/ struct Node *node = orientation -> adjList[src];
+
+	int sizeEFOriginal = orientation->sizeEF;
+	bool isSrcInEFInOriginal;
+	bool isDestInEFInOriginal;
+
+	if(isAdjacentToDirectedEdge(orientation, src) &&
+			isAdjacentToUndirectedEdge(orientation, src)) {
+		isSrcInEFInOriginal = true;
+	} else {
+		isSrcInEFInOriginal = false;
+	}
+
+	if(isAdjacentToDirectedEdge(orientation, dest) &&
+			isAdjacentToUndirectedEdge(orientation, dest)) {
+		isDestInEFInOriginal = true;
+	} else {
+		isDestInEFInOriginal = false;
+	}
+
 	while(node -> v != dest) node = node -> next;
 	node -> orientation = 1;
 
@@ -117,10 +167,137 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 	while(node -> v != src)
 		node = node -> next;
 	node -> orientation = -1;
+
+	// From here on, we refresh information about EF.
+	
+	if(orientation->reachFrom == NULL) {
+		// This is the first edge to be oriented.
+		orientation -> sizeEF = 2;
+		orientation -> EF = malloc(orientation->sizeEF * sizeof(int));
+		if(src < dest) {
+			orientation->EF[0] = src;
+			orientation->EF[1] = dest;
+		} else {
+			orientation->EF[0] = dest;
+			orientation->EF[1] = src;
+		}
+		orientation -> reachFrom = 
+			malloc(orientation -> sizeEF * sizeof(int *));
+		orientation -> reachTo = 
+			malloc(orientation -> sizeEF * sizeof(int *));
+		for(int i = 0; i < orientation->sizeEF; i++) {
+			orientation -> reachFrom[i] =
+				malloc(orientation->sizeEF * sizeof(int));
+			orientation -> reachTo[i] =
+				malloc(orientation->sizeEF * sizeof(int));
+			for(int j = 0; j < orientation->sizeEF; j++) {
+				orientation->reachFrom[i][j] = -1;
+				orientation->reachTo[i][j] = -1;
+			}
+			orientation->reachFrom[src][0] = dest;
+			orientation->reachTo[dest][0]  = src;
+		}
+		return;
+	}
+
+	// This is NOT the first edge to be oriented.
+	// Remember: the only elements whose "is in" relation with respect
+	// to the EF can change are src and dest;
+	
+	// Define the following variables (with respect to new EF)
+	bool isSrcInEF;
+	bool isDestInEF;
+
+	if(isAdjacentToDirectedEdge(orientation, src) &&
+			isAdjacentToUndirectedEdge(orientation, src)) {
+		isSrcInEF = true;
+	} else {
+		isSrcInEF = false;
+	}
+
+	if(isAdjacentToDirectedEdge(orientation, dest) &&
+			isAdjacentToUndirectedEdge(orientation, dest)) {
+		isDestInEF = true;
+	} else {
+		isDestInEF = false;
+	}
+
+	// Update elimination front.
+	bool isThereChange[4]; 	// Is there any change in EF?
+	for(int i = 0; i < 4; i++) isThereChange[i] = false;
+	if(isSrcInEF && !isSrcInEFInOriginal) {
+		orientation->sizeEF++;
+		isThereChange[0] = true;
+	}
+	if(!isSrcInEF && isSrcInEFInOriginal) {
+		orientation->sizeEF--;
+		isThereChange[1] = true;
+	}
+	if(isDestInEF && !isDestInEFInOriginal) {
+		orientation->sizeEF++;
+		isThereChange[2] = true;
+	}
+	if(!isDestInEF && isDestInEFInOriginal) {
+		orientation->sizeEF--;
+		isThereChange[3] = true;
+	}
+
+	if(!(isThereChange[0] || isThereChange[1] || isThereChange[2] ||
+				isThereChange[3])) {
+		// There was no change in the EF, so we don't need
+		// to update it.
+		goto jump;
+	}
+
+	int* prevEF = orientation->EF;
+	orientation->EF = malloc(orientation->sizeEF * sizeof(int));
+
+	for(int i = 0; i < sizeEFOriginal; i++) {
+		if(prevEF[i] == src) {
+			if(isSrcInEF) {
+				orientation->EF[i] = prevEF[i];
+			}
+			continue;
+		} 
+		if(prevEF[i] == dest) {
+			if(isDestInEF) {
+				orientation->EF[i] = prevEF[i];
+			}
+			continue;
+		} 
+	}
+	free(prevEF);
+
+jump:;
+	// Update reachFrom and reachTo for src and dest.
+	int *originalReachFromSrc = orientation->reachFrom[src];
+	int *originalReachToSrc = orientation->reachTo[src];
+	int *originalReachFromDest = orientation->reachFrom[dest];
+	int *originalReachToDest = orientation->reachTo[dest];
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		orientation->reachFrom = malloc(orientation->sizeEF * sizeof(int*));
+		orientation->reachTo = malloc(orientation->sizeEF * sizeof(int*));
+		for(int j = 0; j < orientation->sizeEF; j++) {
+			orientation->reachFrom[i] = malloc(
+					orientation->sizeEF * sizeof(int));
+			orientation->reachFrom[i][j] = -1;
+			orientation->reachTo[i] = malloc(
+					orientation->sizeEF * sizeof(int));
+			orientation->reachTo[i][j] = -1;
+		}
+	}
+
+	// Here we have to be very careful with the indices of the arrays
+	// because EF (which we use to index reachTo and reachFrom) 
+	// has changed.
+	// We do the following: assume that
+
+	// TODO: Free up previous reachFrom and reachTo.
 }
 
 bool deleteInitialNode (struct Orientation *orientation, int v) {
-	/* returns false iff list is empty */
+	/* Returns false iff adjList[v] is empty. */
+
 	struct Node *initial = orientation -> adjList[v];
 	if (initial == NULL)
 		return false;
@@ -130,20 +307,40 @@ bool deleteInitialNode (struct Orientation *orientation, int v) {
 }
 
 void deleteList (struct Orientation *orientation, int v) {
+	// Deletes adjList[v].
+	// (OBS: for now, use only when deleting the orientation!)
+	
 	while(deleteInitialNode(orientation, v))
 		;
 }
 
 void deleteOrientation(struct Orientation *orientation) {
+	// Frees memory used by orientation.
+	
 	int n = orientation -> n;
 	for (int i = 0; i < n; i++) {
 		deleteList(orientation, i);
 	}
-	free (orientation -> adjList);
-	free (orientation);
+	if(orientation->adjList != NULL) {
+		free (orientation -> adjList);
+	}
+	if(orientation != NULL) {
+		free (orientation);
+	}
+	if(orientation->EF != NULL) {
+		free(orientation->EF);
+	}
+	if(orientation->reachTo != NULL) {
+		free(orientation->reachTo);
+	}
+	if(orientation->reachFrom != NULL) {
+		free(orientation->reachFrom);
+	}
 }
 
 bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *visited) {
+	// Auxiliary function for isReachable function.
+	
 	if (visited[src]) {
 		/*printf("already visited\n"); */
 		return false;
@@ -181,6 +378,8 @@ bool isReachable(struct Orientation *orientation, int src, int dest) {
 }
 
 struct Orientation *createCompleteGraph (int n) {
+	// Allocates memory and returns pointer to a complete
+	// undirected graph on n vertices.
 	struct Orientation *graph = createOrientation(n);
 	for (int i = 0; i < n; i++)
 		for (int j = 0; j < n; j++)
@@ -190,6 +389,8 @@ struct Orientation *createCompleteGraph (int n) {
 }
 
 struct Orientation *createCycle (int n) {
+	// Allocates memory and returns pointer to a cycle
+	// undirected graph on n vertices.
 	struct Orientation *graph = createOrientation(n);
 	for (int i = 0; i < n-1; i++)
 		addEdge(graph, i, i+1);
@@ -198,6 +399,8 @@ struct Orientation *createCycle (int n) {
 }
 
 struct Orientation *createCompleteOrientation (int n) {
+	// Allocates memory and returns pointer to a completely
+	// oriented complete graph on n vertices.
 	struct Orientation *orientation = createCompleteGraph(n);
 	for (int i = 0; i < n; i++)
 		for(int j = 0; j < n; j++)
@@ -312,13 +515,6 @@ struct Orientation *copyOrientation (struct Orientation *original) {
 	return retVal;
 }
 
-bool isStronglyConnected(struct Orientation *orient) {
-	//TODO (probably use DFS?)
-	// assumes that the orientation is a digraph
-	// returns true if and only if the digraph is strongly connected
-	
-	return true;
-}
 
 bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, bool *visited) {
 	if (visited[src] && src != i) {
@@ -528,7 +724,6 @@ void testReachability() {
 }
 
 struct Orientation *importFromFile (char *fileName) {
-	//TODO
 	FILE *p;
 	char line[256];
 	int n = -1; // number of vertices
@@ -603,7 +798,7 @@ struct Orientation *getReachabilityOrientation (struct Orientation *original, in
 	// in the elimination front
 	int i, j;
 	struct Orientation *retVal = copyOrientation(original);
-	return retVal;
+	//return retVal;
 	//printf("before (size EF) = %d\n", sizeEF);
 	//printOrientation(retVal);
 	for (i = 0; i < original -> n; i++) {
