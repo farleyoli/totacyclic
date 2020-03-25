@@ -159,8 +159,8 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 		InitPrevBuffer = prevBuffer;
 
 		if (i == m-1) {
-			// the processing is different for the last
-			// ((m-1)-th to m-th) level
+			// The processing is different for the last
+			// ((m-1)-th to m-th) level.
 			for(j = 0; j < sizeBuf; j++) {
 				tempOr1 = copyOrientation(prevBuffer -> orient);
 				trav = prevBuffer -> node;
@@ -191,6 +191,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 
 		for(j = 0; j < sizeBuf; j++) {
+			printOrientation(prevBuffer -> orient);fflush(stdout);
 			tempOr1 = copyOrientation(prevBuffer -> orient);
 			trav = prevBuffer -> node;
 			tempOr2 = copyOrientation(tempOr1);
@@ -390,7 +391,7 @@ int main() {
 	char fileName[256] = "";
 	char num[32] = "";
 	struct BDDNode *bdd;
-	int i = 274;
+	int i = 1;
 	//for(int i = 0; i < 10; i++) {
 		sprintf(num, "%d", i+1);
 		strcat(fileName, fileNameBase);
@@ -398,7 +399,8 @@ int main() {
 		strcat(fileName, fileNameEnding);
 		orient = importFromFile(fileName);
 		//orient = createCompleteGraph(12);
-		bdd = createBDD(orient);
+		//bdd = createBDD(orient);
+		bdd = createCycleBDD(5);
 		// TODO: fix memory related to Stack
 		testStack(bdd);
 		memset(fileName, 0, sizeof(fileName));

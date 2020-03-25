@@ -75,6 +75,23 @@ void printOrientation (struct Orientation *orientation) {
 		}
 		printf("\n");
 	}
+	printf("reachFrom");
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		printf("[%3d]: ", i);
+		for(int j = 0; j < orientation->sizeEF; j++) {
+			printf("%3d, ", orientation->reachFrom[i][j]);
+		}
+		printf("\n");
+	}
+	printf("reachTo");
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		printf("[%3d]: ", i);
+		for(int j = 0; j < orientation->sizeEF; j++) {
+			printf("%3d, ", orientation->reachTo[i][j]);
+		}
+		printf("\n");
+	}
+
 	printf("------\n");
 }
 
@@ -114,7 +131,6 @@ void deleteEdge (struct Orientation *orientation, int src, int dest) {
 }
 
 bool isAdjacentToDirectedEdge(struct Orientation *orient, int v) {
-	// TODO
 	// Returns true iff v is adjacent to some oriented edge.
 	struct Node *p = orient->adjList[v]; 
 	while(p != NULL) {
@@ -127,7 +143,6 @@ bool isAdjacentToDirectedEdge(struct Orientation *orient, int v) {
 }
 
 bool isAdjacentToUndirectedEdge(struct Orientation *orient, int v) {
-	// TODO
 	// Returns true iff v is adjacent to some undirected edge.
 	struct Node *p = orient->adjList[v]; 
 	while(p != NULL) {
@@ -241,15 +256,16 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 		orientation->sizeEF--;
 		isThereChange[3] = true;
 	}
+	bool wasThereChangeInEF = (isThereChange[0] || 
+			isThereChange[1] || isThereChange[2] || isThereChange[3]);
 
-	if(!(isThereChange[0] || isThereChange[1] || isThereChange[2] ||
-				isThereChange[3])) {
+	int* prevEF = orientation->EF;
+	if(!wasThereChangeInEF) {
 		// There was no change in the EF, so we don't need
 		// to update it.
 		goto jump;
 	}
 
-	int* prevEF = orientation->EF;
 	orientation->EF = malloc(orientation->sizeEF * sizeof(int));
 
 	for(int i = 0; i < sizeEFOriginal; i++) {
@@ -266,10 +282,13 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 			continue;
 		} 
 	}
-	free(prevEF);
 
 jump:;
 	// Update reachFrom and reachTo for src and dest.
+	//
+	// First, we allocate the memory for the new ones.
+	int **originalReachFrom = orientation->reachFrom;
+	int **originalReachTo = orientation->reachFrom;
 	int *originalReachFromSrc = orientation->reachFrom[src];
 	int *originalReachToSrc = orientation->reachTo[src];
 	int *originalReachFromDest = orientation->reachFrom[dest];
@@ -290,9 +309,101 @@ jump:;
 	// Here we have to be very careful with the indices of the arrays
 	// because EF (which we use to index reachTo and reachFrom) 
 	// has changed.
-	// We do the following: assume that
+	// We get idxSrc, idxDest, newIdxSrc, newIdxDest
+	// We do the following below for each reach{From, To}[i]:
+	// We loop through the new EF, for each element there find out
+	// its index in the previous EF (-1 if it is not in the previous EF).
+	// If i is not in {src, dest}, we just copy it. If i is there, we apply
+	// the rules.
+	int idxSrc, idxDest, newIdxSrc, newIdxDest;
+	for(int i = 0; i < sizeEFOriginal; i++) {
+		if(prevEF[i] == src) {
+			idxSrc = i;
+		}
+		if(prevEF[i] == dest) {
+			idxDest = i;
+		}
+	}
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		if(prevEF[i] == src) {
+			newIdxSrc = i;
+		}
+		if(prevEF[i] == dest) {
+			newIdxDest = i;
+		}
+	}
 
-	// TODO: Free up previous reachFrom and reachTo.
+	// Initially for src and dest
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		// Find previous index of EF[i]
+		int pIdx = -1;
+		for(int j = 0; j < sizeEFOriginal; j++) {
+			if(orientation->EF[i] == prevEF[j]) {
+				pIdx = j;
+				break;
+			}
+			if(pIdx == -1) {
+				goto cnt1; // Continue, but for outer loop.
+			}
+		}
+		// reachFrom[src]: no change.
+		orientation->reachFrom[newIdxSrc][i] = originalReachFromSrc[pIdx];
+		// reachTo[src] <- reachTo[src] \cup reachTo[dest].
+		orientation->reachTo[newIdxSrc][i] = originalReachToSrc[pIdx];
+		orientation->reachTo[newIdxSrc][i] = originalReachToDest[pIdx];
+		// reachFrom[dest] <- reachFrom[src] \cup reachFrom[dest].
+		orientation->reachTo[newIdxDest][i] = originalReachFromSrc[pIdx];
+		orientation->reachTo[newIdxDest][i] = originalReachFromDest[pIdx];
+		// reachTo[dest]: no change.
+		orientation->reachTo[newIdxDest][i] = originalReachToDest[pIdx];
+cnt1:;
+	}
+
+	// Now for those reachTo[i], reachFrom[i] for which i != src, dest
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		if(i == newIdxSrc || i == newIdxDest) {
+			continue;
+		}
+		int pI = -1;		// Previous i.
+		for(int k = 0; k < sizeEFOriginal; k++) {
+			if(orientation->EF[i] == prevEF[k]) {
+				pI = k;
+				break;
+			}
+			if(pI == -1) {
+				goto cnt2; // Continue, but for outer loop.
+			}
+		}
+		for(int j = 0; j < orientation->sizeEF; j++) {
+			int pJ = -1;	// Previous j.
+			for(int k = 0; k < sizeEFOriginal; k++) {
+				if(orientation->EF[j] == prevEF[k]) {
+					pJ = k;
+					break;
+				}
+				if(pJ == -1) {
+					goto cnt3; // Continue, but for outer loop.
+				}
+			}
+			orientation->reachFrom[i][j] = originalReachFrom[pI][pJ];
+			orientation->reachTo[i][j] = originalReachTo[pI][pJ];
+cnt3:;
+		}
+cnt2:;
+	}
+
+	// Free up memory of previous EF, reachFrom and reachTo.
+	if(wasThereChangeInEF) {
+		free(prevEF);
+	}
+	for(int i = 0; i < sizeEFOriginal; i++) {
+		if(originalReachFrom[i] != NULL)
+			free(originalReachFrom[i]);
+		if(originalReachTo[i] != NULL)
+			free(originalReachTo[i]);
+	}
+	free(originalReachFrom);
+	free(originalReachTo);
 }
 
 bool deleteInitialNode (struct Orientation *orientation, int v) {
@@ -512,6 +623,26 @@ struct Orientation *copyOrientation (struct Orientation *original) {
 	for (i = 0; i < original -> n; i++) {
 		retVal -> adjList[i] = copyNodeList(original -> adjList[i]);
 	}
+	retVal->sizeEF = original->sizeEF;
+
+	// EF, reachFrom, reachTo
+	retVal->EF = malloc(retVal->sizeEF * sizeof(int));
+	for(int i = 0; i < retVal->sizeEF; i++) {
+		retVal->EF[i] = original->EF[i];
+	}
+	retVal->reachFrom = malloc(retVal->sizeEF * sizeof(int*));
+	retVal->reachTo = malloc(retVal->sizeEF * sizeof(int*));
+	for(int i = 0; i < retVal->sizeEF; i++) {
+		retVal->reachFrom[i] = malloc(retVal->sizeEF * sizeof(int));	
+		retVal->reachTo[i] = malloc(retVal->sizeEF * sizeof(int));	
+	}
+	for(int i = 0; i < retVal->sizeEF; i++) {
+		for(int j = 0; j < retVal->sizeEF; j++) {
+			retVal->reachFrom[i][j] = original->reachFrom[i][j];
+			retVal->reachTo[i][j] = original->reachTo[i][j];
+		}
+	}
+
 	return retVal;
 }
 
@@ -540,8 +671,8 @@ bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, b
 }
 
 bool isSelfReachable (struct Orientation *orient, int i) {
-	//assumes that orient is a digraph
-	//returns true if and only if vertex i can reach itself
+	// Assumes that orient is a digraph.
+	// Returns true if and only if vertex i can reach itself.
 	int n = orient -> n;
 	bool *visited;
 	visited = (bool *) malloc(n * sizeof(bool));
