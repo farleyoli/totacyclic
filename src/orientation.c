@@ -5,6 +5,7 @@
 #include <limits.h>
 
 #include "orientation.h"
+#include "dynamic-array.h"
 
 struct Node *createNode(int v) {
 	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
@@ -30,13 +31,6 @@ struct Orientation *createOrientation (int noV) {
 	return orientation;
 }
 
-int compareFunction (const void *a, const void *b) {
-	// Compare function to be used with qsort to sort a list of
-	// integers.
-	int *x = (int *) a;
-	int *y = (int *) b;
-	return *x - *y;
-}
 
 void appendNode (struct Node **list, struct Node *node, int v) {
 	/* list: adjacency list of the orientation */

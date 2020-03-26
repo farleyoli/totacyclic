@@ -374,6 +374,9 @@ void testBufferList() {
 
 
 int main() {
+	DATest();
+	return 0;
+
 	srand(time(0));
 
 	//int n = 10;

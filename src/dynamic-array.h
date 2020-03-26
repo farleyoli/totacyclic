@@ -26,4 +26,13 @@ void DATest ();
 
 void DADelete (struct DynamicArray* da);
 
+struct DynamicArray* DADifference (struct DynamicArray* da, struct DynamicArray* db);
+
+struct DynamicArray* DACopy (struct DynamicArray* da);
+
+int compareFunction (const void *a, const void *b);
+
+struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db);
+
+int DASize (struct DynamicArray* da);
 #endif

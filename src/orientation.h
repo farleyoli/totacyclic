@@ -78,4 +78,5 @@ struct Orientation *createErdosRenyi (int n, double p);
 
 struct Orientation *getReachabilityOrientation (struct Orientation *original, int* EF, int sizeEF);
 
+
 #endif
