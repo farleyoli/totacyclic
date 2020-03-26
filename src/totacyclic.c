@@ -6,6 +6,7 @@
 
 #include "bdd.h"
 #include "orientation.h"
+#include "dynamic-array.h"
 
 struct OrientBuffer {
 	/* Buffer containing the orientations for each level of the BDD*/

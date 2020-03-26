@@ -8,12 +8,11 @@ struct DynamicArray {
 	int j;			// Index of the first element.
 };
 
-struct DynamicArray* DAinitialize ();
+struct DynamicArray* DAInitialize ();
 
 int DAGet (int i, struct DynamicArray* da);
 
 int DASet (int i, int x, struct DynamicArray* da);
-
 
 void DAResize(struct DynamicArray* da);
 
@@ -21,5 +20,10 @@ void DAAdd (int i, int x, struct DynamicArray* da);
 
 int DARemove (int i, struct DynamicArray* da);
 
+void DAPrint (struct DynamicArray* da);
+
+void DATest ();
+
+void DADelete (struct DynamicArray* da);
 
 #endif
