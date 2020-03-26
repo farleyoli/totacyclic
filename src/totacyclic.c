@@ -135,6 +135,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
 	computeLexOrder(u, v, undir);
+	printf("debug!\n");fflush(stdout);
 
 	int *EF = NULL;
 	int sizeEF = 0;
@@ -386,7 +387,7 @@ int main() {
 
 	
 	struct Orientation *orient;
-	char fileNameBase[] = "graphs/";
+	char fileNameBase[] = "../graphs/";
 	char fileNameEnding[] = ".txt";
 	char fileName[256] = "";
 	char num[32] = "";

@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
 
 #include "orientation.h"
 
@@ -26,6 +28,14 @@ struct Orientation *createOrientation (int noV) {
 	orientation -> reachFrom = NULL;
 	orientation -> EF = NULL;
 	return orientation;
+}
+
+int compareFunction (const void *a, const void *b) {
+	// Compare function to be used with qsort to sort a list of
+	// integers.
+	int *x = (int *) a;
+	int *y = (int *) b;
+	return *x - *y;
 }
 
 void appendNode (struct Node **list, struct Node *node, int v) {
@@ -75,16 +85,22 @@ void printOrientation (struct Orientation *orientation) {
 		}
 		printf("\n");
 	}
-	printf("reachFrom");
+	if(orientation->sizeEF > 0) printf("EF: ");
 	for(int i = 0; i < orientation->sizeEF; i++) {
+		printf("%d ", orientation->EF[i]);
+	}
+	if(orientation->sizeEF > 0) printf("\n");
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		printf("reachFrom");
 		printf("[%3d]: ", i);
 		for(int j = 0; j < orientation->sizeEF; j++) {
 			printf("%3d, ", orientation->reachFrom[i][j]);
 		}
 		printf("\n");
 	}
-	printf("reachTo");
+	printf("\n");
 	for(int i = 0; i < orientation->sizeEF; i++) {
+	printf("reachTo  ");
 		printf("[%3d]: ", i);
 		for(int j = 0; j < orientation->sizeEF; j++) {
 			printf("%3d, ", orientation->reachTo[i][j]);
@@ -155,7 +171,6 @@ bool isAdjacentToUndirectedEdge(struct Orientation *orient, int v) {
 }
 
 void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient from src to dest*/ struct Node *node = orientation -> adjList[src];
-
 	int sizeEFOriginal = orientation->sizeEF;
 	bool isSrcInEFInOriginal;
 	bool isDestInEFInOriginal;
@@ -174,7 +189,9 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 		isDestInEFInOriginal = false;
 	}
 
-	while(node -> v != dest) node = node -> next;
+	while(node -> v != dest) 
+		node = node -> next;
+
 	node -> orientation = 1;
 
 
@@ -206,11 +223,17 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 			orientation -> reachTo[i] =
 				malloc(orientation->sizeEF * sizeof(int));
 			for(int j = 0; j < orientation->sizeEF; j++) {
-				orientation->reachFrom[i][j] = -1;
-				orientation->reachTo[i][j] = -1;
+				orientation->reachFrom[i][j] = INT_MAX;
+				orientation->reachTo[i][j] = INT_MAX;
 			}
-			orientation->reachFrom[src][0] = dest;
-			orientation->reachTo[dest][0]  = src;
+
+			int idxSrc, idxDest;
+			for(int i = 0; i < orientation->sizeEF; i++) {
+				if(orientation->EF[i]==src) idxSrc = i;
+				if(orientation->EF[i]==dest) idxDest = i;
+			}
+			orientation->reachFrom[idxDest][0] = src;
+			orientation->reachTo[idxSrc][0]  = dest;
 		}
 		return;
 	}
@@ -268,20 +291,31 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 
 	orientation->EF = malloc(orientation->sizeEF * sizeof(int));
 
+	int count = 0;
+
 	for(int i = 0; i < sizeEFOriginal; i++) {
 		if(prevEF[i] == src) {
 			if(isSrcInEF) {
-				orientation->EF[i] = prevEF[i];
+				orientation->EF[count++] = prevEF[i];
 			}
 			continue;
 		} 
 		if(prevEF[i] == dest) {
 			if(isDestInEF) {
-				orientation->EF[i] = prevEF[i];
+				orientation->EF[count++] = prevEF[i];
 			}
 			continue;
 		} 
+		orientation->EF[count++] = prevEF[i];
 	}
+	if(isSrcInEF && !isSrcInEFInOriginal) {
+		orientation->EF[count++] = src;
+	}
+	if(isDestInEF && !isDestInEFInOriginal) {
+		orientation->EF[count++] = dest;
+	}
+
+	qsort (orientation->EF, orientation->sizeEF, sizeof(int), compareFunction);
 
 jump:;
 	// Update reachFrom and reachTo for src and dest.
@@ -289,108 +323,62 @@ jump:;
 	// First, we allocate the memory for the new ones.
 	int **originalReachFrom = orientation->reachFrom;
 	int **originalReachTo = orientation->reachFrom;
-	int *originalReachFromSrc = orientation->reachFrom[src];
-	int *originalReachToSrc = orientation->reachTo[src];
-	int *originalReachFromDest = orientation->reachFrom[dest];
-	int *originalReachToDest = orientation->reachTo[dest];
+	orientation->reachFrom = malloc(orientation->sizeEF * sizeof(int*));
+	orientation->reachTo = malloc(orientation->sizeEF * sizeof(int*));
 	for(int i = 0; i < orientation->sizeEF; i++) {
-		orientation->reachFrom = malloc(orientation->sizeEF * sizeof(int*));
-		orientation->reachTo = malloc(orientation->sizeEF * sizeof(int*));
+		orientation->reachFrom[i] = malloc(orientation->sizeEF *
+				sizeof(int));
+		orientation->reachTo[i] = malloc(orientation->sizeEF *
+				sizeof(int));
 		for(int j = 0; j < orientation->sizeEF; j++) {
-			orientation->reachFrom[i] = malloc(
-					orientation->sizeEF * sizeof(int));
-			orientation->reachFrom[i][j] = -1;
-			orientation->reachTo[i] = malloc(
-					orientation->sizeEF * sizeof(int));
-			orientation->reachTo[i][j] = -1;
+			orientation->reachFrom[i][j] = INT_MAX;
+			orientation->reachTo[i][j] = INT_MAX;
 		}
 	}
 
 	// Here we have to be very careful with the indices of the arrays
 	// because EF (which we use to index reachTo and reachFrom) 
 	// has changed.
-	// We get idxSrc, idxDest, newIdxSrc, newIdxDest
+	// We get idxSrc, idxDest, pIdxSrc, pIdxDest
 	// We do the following below for each reach{From, To}[i]:
 	// We loop through the new EF, for each element there find out
 	// its index in the previous EF (-1 if it is not in the previous EF).
 	// If i is not in {src, dest}, we just copy it. If i is there, we apply
 	// the rules.
-	int idxSrc, idxDest, newIdxSrc, newIdxDest;
+	// TODO:
+	
+	// We do src and dest first:
+	int *counter = calloc(orientation->sizeEF, sizeof(int));
+	int srcIdx = -1, destIdx = -1, pSrcIdx = -1, pDestIdx = -1;
+
+	for(int i = 0; i < orientation->sizeEF; i++) {
+		if(orientation->EF[i] == src) {
+			srcIdx = i;
+		}
+	}
+
 	for(int i = 0; i < sizeEFOriginal; i++) {
 		if(prevEF[i] == src) {
-			idxSrc = i;
-		}
-		if(prevEF[i] == dest) {
-			idxDest = i;
-		}
-	}
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		if(prevEF[i] == src) {
-			newIdxSrc = i;
-		}
-		if(prevEF[i] == dest) {
-			newIdxDest = i;
+			pSrcIdx = i;
 		}
 	}
 
-	// Initially for src and dest
 	for(int i = 0; i < orientation->sizeEF; i++) {
-		// Find previous index of EF[i]
-		int pIdx = -1;
-		for(int j = 0; j < sizeEFOriginal; j++) {
-			if(orientation->EF[i] == prevEF[j]) {
-				pIdx = j;
-				break;
-			}
-			if(pIdx == -1) {
-				goto cnt1; // Continue, but for outer loop.
-			}
+		if(orientation->EF[i] == dest) {
+			destIdx = i;
 		}
-		// reachFrom[src]: no change.
-		orientation->reachFrom[newIdxSrc][i] = originalReachFromSrc[pIdx];
-		// reachTo[src] <- reachTo[src] \cup reachTo[dest].
-		orientation->reachTo[newIdxSrc][i] = originalReachToSrc[pIdx];
-		orientation->reachTo[newIdxSrc][i] = originalReachToDest[pIdx];
-		// reachFrom[dest] <- reachFrom[src] \cup reachFrom[dest].
-		orientation->reachTo[newIdxDest][i] = originalReachFromSrc[pIdx];
-		orientation->reachTo[newIdxDest][i] = originalReachFromDest[pIdx];
-		// reachTo[dest]: no change.
-		orientation->reachTo[newIdxDest][i] = originalReachToDest[pIdx];
-cnt1:;
 	}
 
-	// Now for those reachTo[i], reachFrom[i] for which i != src, dest
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		if(i == newIdxSrc || i == newIdxDest) {
-			continue;
+	for(int i = 0; i < sizeEFOriginal; i++) {
+		if(prevEF[i] == dest) {
+			pDestIdx = i;
 		}
-		int pI = -1;		// Previous i.
-		for(int k = 0; k < sizeEFOriginal; k++) {
-			if(orientation->EF[i] == prevEF[k]) {
-				pI = k;
-				break;
-			}
-			if(pI == -1) {
-				goto cnt2; // Continue, but for outer loop.
-			}
-		}
-		for(int j = 0; j < orientation->sizeEF; j++) {
-			int pJ = -1;	// Previous j.
-			for(int k = 0; k < sizeEFOriginal; k++) {
-				if(orientation->EF[j] == prevEF[k]) {
-					pJ = k;
-					break;
-				}
-				if(pJ == -1) {
-					goto cnt3; // Continue, but for outer loop.
-				}
-			}
-			orientation->reachFrom[i][j] = originalReachFrom[pI][pJ];
-			orientation->reachTo[i][j] = originalReachTo[pI][pJ];
-cnt3:;
-		}
-cnt2:;
 	}
+
+	assert((srcIdx == -1) == !isSrcInEF);
+	assert((pSrcIdx == -1) == !isSrcInEFInOriginal);
+	assert((destIdx == -1) == !isDestInEF);
+	assert((pDestIdx == -1) == !isDestInEFInOriginal);
 
 	// Free up memory of previous EF, reachFrom and reachTo.
 	if(wasThereChangeInEF) {
@@ -623,9 +611,17 @@ struct Orientation *copyOrientation (struct Orientation *original) {
 	for (i = 0; i < original -> n; i++) {
 		retVal -> adjList[i] = copyNodeList(original -> adjList[i]);
 	}
-	retVal->sizeEF = original->sizeEF;
 
 	// EF, reachFrom, reachTo
+	
+	retVal->sizeEF = original->sizeEF;
+	if(original->sizeEF < 0) {
+		retVal->EF = NULL;
+		retVal->reachFrom = NULL;
+		retVal->reachTo = NULL;
+		return retVal;
+	}
+
 	retVal->EF = malloc(retVal->sizeEF * sizeof(int));
 	for(int i = 0; i < retVal->sizeEF; i++) {
 		retVal->EF[i] = original->EF[i];
@@ -707,6 +703,7 @@ void computeLexOrder (int *u, int *v, struct Orientation *undir) {
 				next = p->v;
 			}
 			if(p->orientation==0) {
+				printOrientation(o);
 				orientEdge(o, i, p->v);
 				u[counter] = i;
 				v[counter++] = p->v;
