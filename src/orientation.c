@@ -85,14 +85,14 @@ void printOrientation (struct Orientation *orientation) {
 	if(orientation->sizeEF > 0) printf("\n");
 	for(int i = 0; i < orientation->sizeEF; i++) {
 		printf("reachFrom");
-		printf("[%3d]: ", i);
+		printf("[%d] (EF[%d] = %d): ", i, i, DAGet(i, orientation->EF));
 		DAPrint(orientation->reachFrom[i]);
 		printf("\n");
 	}
 	printf("\n");
 	for(int i = 0; i < orientation->sizeEF; i++) {
 	printf("reachTo  ");
-		printf("[%3d]: ", i);
+		printf("[%d] (EF[%d] = %d): ", i, i, DAGet(i, orientation->EF));
 		DAPrint(orientation->reachTo[i]);
 		printf("\n");
 	}
@@ -281,13 +281,13 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 	// it using the variables as defined above.
 	
 	if(isSrcInEF && !isSrcInEFInOriginal) {
-		DAAppendSorted(src, orientation->EF);
+		DAAddSorted(src, orientation->EF);
 	}
 	if(!isSrcInEF && isSrcInEFInOriginal) {
 		DARemoveElement(src, orientation->EF);
 	}
 	if(isDestInEF && !isDestInEFInOriginal) {
-		DAAppendSorted(dest, orientation->EF);
+		DAAddSorted(dest, orientation->EF);
 	}
 	if(!isDestInEF && isDestInEFInOriginal) {
 		DARemoveElement(dest, orientation->EF);
@@ -329,10 +329,13 @@ jump:;
 	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
 		orientation->reachTo[srcIdx] = DAUnion(originalReachTo[pSrcIdx], 
 			originalReachTo[pDestIdx], true);
+		DAAddSorted(dest,orientation->reachTo[srcIdx]);
 	} else if(isSrcInEFInOriginal) {
 		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pSrcIdx]);
+		DAAddSorted(dest,orientation->reachTo[srcIdx]);
 	} else {
 		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pDestIdx]);
+		DAAddSorted(dest,orientation->reachTo[srcIdx]);
 	}
 
 	if(!isDestInEF) {
@@ -340,10 +343,13 @@ jump:;
 	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
 		orientation->reachFrom[destIdx] = DAUnion(originalReachFrom[pSrcIdx], 
 			originalReachFrom[pDestIdx], true);
+		DAAddSorted(src,orientation->reachFrom[destIdx]);
 	} else if(isSrcInEFInOriginal) {
 		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pSrcIdx]);
+		DAAddSorted(src,orientation->reachFrom[destIdx]);
 	} else {
 		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pDestIdx]);
+		DAAddSorted(src,orientation->reachFrom[destIdx]);
 	}
 
 
@@ -352,15 +358,22 @@ jump:;
 	}
 
 	assert(orientation->sizeEF == DASize(orientation->EF));
-
+	
 	for(int idx = 0; idx < orientation->sizeEF; idx++) {
+		int v = DAGet(idx, orientation->EF);
 		if (idx == srcIdx || idx == destIdx) {
 			continue;
 		}
-		int pIdx = DAGetIdx(DAGet(idx, orientation->EF), prevEF);
+		int pIdx = DAGetIdx(v, prevEF);
 		assert(pIdx != -1);
 		orientation->reachFrom[idx] = DACopy(originalReachFrom[pIdx]);
+		if(DADoesContain(dest, orientation->reachFrom[idx], true)) {
+			DAAddSorted(src, orientation->reachFrom[idx]);
+		}
 		orientation->reachTo[idx] = DACopy(originalReachTo[pIdx]);
+		if(DADoesContain(src, orientation->reachTo[idx], true)) {
+			DAAddSorted(dest, orientation->reachTo[idx]);
+		}
 	}
 
 
@@ -501,17 +514,15 @@ bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *or
 	/* this function assume that the set of oriented edges are the same*/
 	/* (and thus that the elimination front is the same)*/
 	/* it checks if the reachability relation on the set of vertices given is the same*/
-	int i, j;	
-	for (i = 0; i < length; i++) {
-		for (j = i+1; j < length; j++) {
-			if (isReachable(orient1, setOfVertices[i], setOfVertices[j]) != isReachable(orient2, setOfVertices[i], setOfVertices[j])){
-				//printf("The culprit is (%d, %d)\n", i, j);
-				return false;
-			}
-			if (isReachable(orient1, setOfVertices[j], setOfVertices[i]) != isReachable(orient2, setOfVertices[j], setOfVertices[i])){
-				//printf("The culprit is (%d, %d)\n", i, j);
-				return false;
-			}
+	for(int i = 0; i < length; i++) {
+		assert(DAGet(i,orient1->EF) == DAGet(i, orient2->EF));
+		assert(DAIsSorted(orient1->reachFrom[i]));
+		assert(DAIsSorted(orient1->reachTo[i]));
+		if(!DAAreElementsEqualInOrderRestricted(orient1->reachFrom[i], orient2->reachFrom[i], orient1->EF)) {
+			return false;
+		}
+		if(!DAAreElementsEqualInOrderRestricted(orient1->reachTo[i], orient2->reachTo[i], orient1->EF)) {
+			return false;
 		}
 	}
 

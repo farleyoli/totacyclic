@@ -87,7 +87,7 @@ int DARemoveByIdx (int i, struct DynamicArray* da) {
 
 void DAPrint (struct DynamicArray* da) {
 	if(da == NULL) {
-		printf("DynamicArray is null.\n");
+		//printf("DynamicArray is null.\n");
 		return;
 	}
 	printf("n = %d, a.length = %d, j = %d\n", da->n, da->l, da->j);
@@ -113,9 +113,9 @@ void DATest () {
 	DAAppend(5, da);
 	DASort(da);
 	DAPrint(da);
-	DAAppendSorted(20, da);
+	DAAddSorted(20, da);
 	DAPrint(da);
-	DAAppendSorted(5, da);
+	DAAddSorted(5, da);
 	DAPrint(da);
 
 	DAAppend(-1, db);
@@ -208,8 +208,8 @@ int DARemoveElement(int x, struct DynamicArray* da) {
 	return DARemoveByIdx(DAGetIdx(x, da), da);	
 }
 
-void DAAppendSorted (int x, struct DynamicArray* da) {
-	// Append element to a sorted DA and keep it sorted;
+void DAAddSorted (int x, struct DynamicArray* da) {
+	// Add element to a sorted DA and keep it sorted;
 	// Uses binary search.
 	
 	int left = 0, right = DASize(da)-1;
@@ -252,7 +252,89 @@ void DAAppendSorted (int x, struct DynamicArray* da) {
 			mid = (right+left)/2;
 		}
 	}
-	printf("Something went wrong in DAAppendSorted.\n");
+	printf("Something went wrong in DAAddSorted.\n");
 	return;
 }
 
+bool DAAreElementsEqualInOrder(struct DynamicArray* da, struct DynamicArray* db) {
+	if(da == NULL && db == NULL) return true;
+	if(DASize(da) != DASize(db)) return false;
+
+	for(int i = 0; i < DASize(da); i++) {
+		if(DAGet(i, da) != DAGet(i, db))
+			return false;
+	}
+
+	return true;
+}
+
+bool DAIsSorted (struct DynamicArray* da) {
+	if(da == NULL) {
+		printf("DAIsSorted: Dynamic Array is null\n");
+		return true;
+	}
+	for(int i = 0; i < da->n-1; i++) {
+		if(DAGet(i, da) > DAGet(i+1, da)) return false;
+	}
+	return true;
+}
+
+bool DADoesContain (int x, struct DynamicArray* da, bool isSorted) {
+	// TODO: complete for non-sorted
+	if(!isSorted) {
+		printf("DADoesContain for non-sorted array still not supported!\n");
+		exit(0);
+	}
+
+	if(da == NULL) {
+		printf("Array is null!\n");
+		exit(0);
+	}
+
+	if(da->n == 0) {
+		//printf("Array is empty!\n");
+		return false;
+	}
+
+	int left = 0, right = DASize(da)-1;
+	int mid = (left+right)/2;
+
+	if(DAGet(left, da) == x || DAGet(right, da) == x) {
+		return true;
+	}
+
+	while(mid != right && mid != left) {
+		int midVal = DAGet(mid, da);
+		if (midVal == x) {
+			return true;
+		}
+		if ( x < midVal ) {
+			right = mid;	
+		} else {
+			left = mid;
+		}
+		mid = (right+left)/2;
+	}
+
+	if(DAGet(left, da) == x || DAGet(right, da) == x) {
+		return true;
+	}
+
+	return false;
+}
+
+bool DAAreElementsEqualInOrderRestricted(struct DynamicArray* da, struct DynamicArray* db, struct DynamicArray* dc) {
+	if(da == NULL && db == NULL) return true;
+	
+	for(int i = 0; i < DASize(dc); i++) {
+		int elem = DAGet(i, dc);
+		if(DADoesContain(elem, da, true) && !DADoesContain(elem, db, true)) {
+			return false;
+		}
+		if(!DADoesContain(elem, da, true) && DADoesContain(elem, db, true)) {
+			return false;
+		}
+	}
+
+	return true;
+}

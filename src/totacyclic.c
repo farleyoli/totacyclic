@@ -192,7 +192,6 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 
 		for(j = 0; j < sizeBuf; j++) {
-			//printOrientation(prevBuffer -> orient);fflush(stdout);
 			tempOr1 = copyOrientation(prevBuffer -> orient);
 			trav = prevBuffer -> node;
 			tempOr2 = copyOrientation(tempOr1);
@@ -365,7 +364,8 @@ int main() {
 	//struct BDDNode *bdd = createERBDD(12, 0.35);
 	//struct BDDNode *bdd = createCycleBDD(1000);
 	//testEdgeOrder();
-
+	int n;
+	scanf("%d", &n);
 
 	
 	struct Orientation *orient;
@@ -383,10 +383,15 @@ int main() {
 		orient = importFromFile(fileName);
 		//orient = createCompleteGraph(12);
 		//bdd = createBDD(orient);
-		bdd = createCompleteBDD(10);
+		clock_t t; 
+		t = clock(); 
+		bdd = createCompleteBDD(n);
+		t = clock() - t; 
+		double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
 		// TODO: fix memory related to Stack
 		testStack(bdd);
 		memset(fileName, 0, sizeof(fileName));
 	//}
+	printf("It took %f seconds to create the BDD \n", time_taken);
 	return 0;
 }

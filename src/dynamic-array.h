@@ -40,6 +40,14 @@ int DAGetIdx (int x, struct DynamicArray* da);
 
 int DARemoveElement(int x, struct DynamicArray* da);
 
-void DAAppendSorted (int x, struct DynamicArray* da);
+void DAAddSorted (int x, struct DynamicArray* da);
+
+bool DAAreElementsEqualInOrder(struct DynamicArray* da, struct DynamicArray* db);
+
+bool DAIsSorted (struct DynamicArray* da);
+
+bool DADoesContain (int x, struct DynamicArray* da, bool isSorted);
+
+bool DAAreElementsEqualInOrderRestricted(struct DynamicArray* da, struct DynamicArray* db, struct DynamicArray* dc);
 
 #endif
