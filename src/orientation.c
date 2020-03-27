@@ -6,6 +6,7 @@
 
 #include "orientation.h"
 #include "dynamic-array.h"
+#include "general-utils.h"
 
 struct Node *createNode(int v) {
 	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
@@ -80,25 +81,19 @@ void printOrientation (struct Orientation *orientation) {
 		printf("\n");
 	}
 	if(orientation->sizeEF > 0) printf("EF: ");
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		printf("%d ", orientation->EF[i]);
-	}
+	DAPrint(orientation->EF);
 	if(orientation->sizeEF > 0) printf("\n");
 	for(int i = 0; i < orientation->sizeEF; i++) {
 		printf("reachFrom");
 		printf("[%3d]: ", i);
-		for(int j = 0; j < orientation->sizeEF; j++) {
-			printf("%3d, ", orientation->reachFrom[i][j]);
-		}
+		DAPrint(orientation->reachFrom[i]);
 		printf("\n");
 	}
 	printf("\n");
 	for(int i = 0; i < orientation->sizeEF; i++) {
 	printf("reachTo  ");
 		printf("[%3d]: ", i);
-		for(int j = 0; j < orientation->sizeEF; j++) {
-			printf("%3d, ", orientation->reachTo[i][j]);
-		}
+		DAPrint(orientation->reachTo[i]);
 		printf("\n");
 	}
 
@@ -199,36 +194,31 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 	if(orientation->reachFrom == NULL) {
 		// This is the first edge to be oriented.
 		orientation -> sizeEF = 2;
-		orientation -> EF = malloc(orientation->sizeEF * sizeof(int));
+		orientation -> EF = DAInitialize();
 		if(src < dest) {
-			orientation->EF[0] = src;
-			orientation->EF[1] = dest;
+			DAAppend(src, orientation->EF);
+			DAAppend(dest, orientation->EF);
 		} else {
-			orientation->EF[0] = dest;
-			orientation->EF[1] = src;
+			DAAppend(dest, orientation->EF);
+			DAAppend(src, orientation->EF);
 		}
-		orientation -> reachFrom = 
-			malloc(orientation -> sizeEF * sizeof(int *));
-		orientation -> reachTo = 
-			malloc(orientation -> sizeEF * sizeof(int *));
-		for(int i = 0; i < orientation->sizeEF; i++) {
-			orientation -> reachFrom[i] =
-				malloc(orientation->sizeEF * sizeof(int));
-			orientation -> reachTo[i] =
-				malloc(orientation->sizeEF * sizeof(int));
-			for(int j = 0; j < orientation->sizeEF; j++) {
-				orientation->reachFrom[i][j] = INT_MAX;
-				orientation->reachTo[i][j] = INT_MAX;
-			}
 
-			int idxSrc, idxDest;
-			for(int i = 0; i < orientation->sizeEF; i++) {
-				if(orientation->EF[i]==src) idxSrc = i;
-				if(orientation->EF[i]==dest) idxDest = i;
-			}
-			orientation->reachFrom[idxDest][0] = src;
-			orientation->reachTo[idxSrc][0]  = dest;
+		assert(orientation->sizeEF == DASize(orientation->EF));
+		orientation -> reachFrom = 
+			malloc(orientation -> sizeEF * sizeof(struct DynamicArray *));
+		orientation -> reachTo = 
+			malloc(orientation -> sizeEF * sizeof(struct DynamicArray *));
+
+		for(int i = 0; i < orientation->sizeEF; i++) {
+			orientation -> reachFrom[i] = DAInitialize();
+			orientation -> reachTo[i] = DAInitialize();
 		}
+		int EFIdxSrc = DAGetIdx(src, orientation->EF);
+		int EFIdxDest = DAGetIdx(dest, orientation->EF);
+		assert(EFIdxSrc != -1 && EFIdxDest != -1);
+
+		DAAppend(src, orientation->reachFrom[EFIdxDest]);
+		DAAppend(dest, orientation->reachTo[EFIdxSrc]);
 		return;
 	}
 
@@ -276,116 +266,120 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 	bool wasThereChangeInEF = (isThereChange[0] || 
 			isThereChange[1] || isThereChange[2] || isThereChange[3]);
 
-	int* prevEF = orientation->EF;
+	struct DynamicArray* prevEF = orientation->EF;
+
 	if(!wasThereChangeInEF) {
 		// There was no change in the EF, so we don't need
 		// to update it.
 		goto jump;
 	}
 
-	orientation->EF = malloc(orientation->sizeEF * sizeof(int));
+	orientation->EF = DACopy(prevEF);
 
-	int count = 0;
-
-	for(int i = 0; i < sizeEFOriginal; i++) {
-		if(prevEF[i] == src) {
-			if(isSrcInEF) {
-				orientation->EF[count++] = prevEF[i];
-			}
-			continue;
-		} 
-		if(prevEF[i] == dest) {
-			if(isDestInEF) {
-				orientation->EF[count++] = prevEF[i];
-			}
-			continue;
-		} 
-		orientation->EF[count++] = prevEF[i];
-	}
+	// The only memberships of EF that can possibly change
+	// are src and dest, and we can decide which of them have changed
+	// it using the variables as defined above.
+	
 	if(isSrcInEF && !isSrcInEFInOriginal) {
-		orientation->EF[count++] = src;
+		DAAppendSorted(src, orientation->EF);
+	}
+	if(!isSrcInEF && isSrcInEFInOriginal) {
+		DARemoveElement(src, orientation->EF);
 	}
 	if(isDestInEF && !isDestInEFInOriginal) {
-		orientation->EF[count++] = dest;
+		DAAppendSorted(dest, orientation->EF);
+	}
+	if(!isDestInEF && isDestInEFInOriginal) {
+		DARemoveElement(dest, orientation->EF);
 	}
 
-	qsort (orientation->EF, orientation->sizeEF, sizeof(int), compareFunction);
 
 jump:;
 	// Update reachFrom and reachTo for src and dest.
 	//
 	// First, we allocate the memory for the new ones.
-	int **originalReachFrom = orientation->reachFrom;
-	int **originalReachTo = orientation->reachFrom;
-	orientation->reachFrom = malloc(orientation->sizeEF * sizeof(int*));
-	orientation->reachTo = malloc(orientation->sizeEF * sizeof(int*));
+	assert(orientation->sizeEF == DASize(orientation->EF));
+	struct DynamicArray **originalReachFrom = orientation->reachFrom;
+	struct DynamicArray **originalReachTo = orientation->reachTo;
+	orientation->reachFrom = malloc(orientation->sizeEF * 
+			sizeof(struct DynamicArray*));
+	orientation->reachTo = malloc(orientation->sizeEF * 
+			sizeof(struct DynamicArray*));
+
+
 	for(int i = 0; i < orientation->sizeEF; i++) {
-		orientation->reachFrom[i] = malloc(orientation->sizeEF *
-				sizeof(int));
-		orientation->reachTo[i] = malloc(orientation->sizeEF *
-				sizeof(int));
-		for(int j = 0; j < orientation->sizeEF; j++) {
-			orientation->reachFrom[i][j] = INT_MAX;
-			orientation->reachTo[i][j] = INT_MAX;
-		}
+		orientation->reachFrom[i] = DAInitialize();
+		orientation->reachTo[i] = DAInitialize();
 	}
 
-	// Here we have to be very careful with the indices of the arrays
-	// because EF (which we use to index reachTo and reachFrom) 
-	// has changed.
-	// We get idxSrc, idxDest, pIdxSrc, pIdxDest
-	// We do the following below for each reach{From, To}[i]:
-	// We loop through the new EF, for each element there find out
-	// its index in the previous EF (-1 if it is not in the previous EF).
-	// If i is not in {src, dest}, we just copy it. If i is there, we apply
-	// the rules.
-	// TODO:
+	// From here on, we update reachFrom and reachTo	
+	int srcIdx, destIdx, pSrcIdx, pDestIdx;		// p = previous
+	srcIdx = DAGetIdx(src, orientation->EF);	
+	destIdx = DAGetIdx(dest, orientation->EF);	
+	pSrcIdx = DAGetIdx(src, prevEF);	
+	pDestIdx = DAGetIdx(dest, prevEF);
 	
-	// We do src and dest first:
-	int *counter = calloc(orientation->sizeEF, sizeof(int));
-	int srcIdx = -1, destIdx = -1, pSrcIdx = -1, pDestIdx = -1;
-
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		if(orientation->EF[i] == src) {
-			srcIdx = i;
-		}
+	if(isSrcInEF && isSrcInEFInOriginal) {
+		orientation->reachFrom[srcIdx] = DACopy(originalReachFrom[pSrcIdx]);
 	}
 
-	for(int i = 0; i < sizeEFOriginal; i++) {
-		if(prevEF[i] == src) {
-			pSrcIdx = i;
-		}
+
+	if(!isSrcInEF) {
+		;	
+	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
+		orientation->reachTo[srcIdx] = DAUnion(originalReachTo[pSrcIdx], 
+			originalReachTo[pDestIdx], true);
+	} else if(isSrcInEFInOriginal) {
+		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pSrcIdx]);
+	} else {
+		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pDestIdx]);
 	}
 
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		if(orientation->EF[i] == dest) {
-			destIdx = i;
-		}
+	if(!isDestInEF) {
+		;	
+	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
+		orientation->reachFrom[destIdx] = DAUnion(originalReachFrom[pSrcIdx], 
+			originalReachFrom[pDestIdx], true);
+	} else if(isSrcInEFInOriginal) {
+		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pSrcIdx]);
+	} else {
+		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pDestIdx]);
 	}
 
-	for(int i = 0; i < sizeEFOriginal; i++) {
-		if(prevEF[i] == dest) {
-			pDestIdx = i;
-		}
+
+	if(isDestInEF && isDestInEFInOriginal) {
+		orientation->reachTo[destIdx] = DACopy(originalReachTo[pDestIdx]);
 	}
 
-	assert((srcIdx == -1) == !isSrcInEF);
-	assert((pSrcIdx == -1) == !isSrcInEFInOriginal);
-	assert((destIdx == -1) == !isDestInEF);
-	assert((pDestIdx == -1) == !isDestInEFInOriginal);
+	assert(orientation->sizeEF == DASize(orientation->EF));
+
+	for(int idx = 0; idx < orientation->sizeEF; idx++) {
+		if (idx == srcIdx || idx == destIdx) {
+			continue;
+		}
+		int pIdx = DAGetIdx(DAGet(idx, orientation->EF), prevEF);
+		assert(pIdx != -1);
+		orientation->reachFrom[idx] = DACopy(originalReachFrom[pIdx]);
+		orientation->reachTo[idx] = DACopy(originalReachTo[pIdx]);
+	}
+
 
 	// Free up memory of previous EF, reachFrom and reachTo.
 	if(wasThereChangeInEF) {
-		free(prevEF);
+		DADelete(prevEF);
 	}
 	for(int i = 0; i < sizeEFOriginal; i++) {
 		if(originalReachFrom[i] != NULL)
-			free(originalReachFrom[i]);
+			DADelete(originalReachFrom[i]);
 		if(originalReachTo[i] != NULL)
-			free(originalReachTo[i]);
+			DADelete(originalReachTo[i]);
 	}
-	free(originalReachFrom);
-	free(originalReachTo);
+	if(originalReachFrom != NULL) {
+		free(originalReachFrom);
+	}
+	if(originalReachTo != NULL) {
+		free(originalReachTo);
+	}
 }
 
 bool deleteInitialNode (struct Orientation *orientation, int v) {
@@ -616,21 +610,13 @@ struct Orientation *copyOrientation (struct Orientation *original) {
 		return retVal;
 	}
 
-	retVal->EF = malloc(retVal->sizeEF * sizeof(int));
+	retVal->EF = DACopy(original->EF);
+	
+	retVal->reachFrom = malloc(retVal->sizeEF * sizeof(struct DynamicArray*));
+	retVal->reachTo = malloc(retVal->sizeEF * sizeof(struct DynamicArray*));
 	for(int i = 0; i < retVal->sizeEF; i++) {
-		retVal->EF[i] = original->EF[i];
-	}
-	retVal->reachFrom = malloc(retVal->sizeEF * sizeof(int*));
-	retVal->reachTo = malloc(retVal->sizeEF * sizeof(int*));
-	for(int i = 0; i < retVal->sizeEF; i++) {
-		retVal->reachFrom[i] = malloc(retVal->sizeEF * sizeof(int));	
-		retVal->reachTo[i] = malloc(retVal->sizeEF * sizeof(int));	
-	}
-	for(int i = 0; i < retVal->sizeEF; i++) {
-		for(int j = 0; j < retVal->sizeEF; j++) {
-			retVal->reachFrom[i][j] = original->reachFrom[i][j];
-			retVal->reachTo[i][j] = original->reachTo[i][j];
-		}
+		retVal->reachFrom[i] = DACopy(original->reachFrom[i]);;	
+		retVal->reachTo[i] = DACopy(original->reachTo[i]);;	
 	}
 
 	return retVal;
@@ -697,7 +683,7 @@ void computeLexOrder (int *u, int *v, struct Orientation *undir) {
 				next = p->v;
 			}
 			if(p->orientation==0) {
-				printOrientation(o);
+				//printOrientation(o);
 				orientEdge(o, i, p->v);
 				u[counter] = i;
 				v[counter++] = p->v;

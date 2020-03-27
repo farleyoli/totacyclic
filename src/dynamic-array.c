@@ -5,6 +5,7 @@
 #include <limits.h>
 
 #include "dynamic-array.h"
+#include "general-utils.h"
 
 struct DynamicArray* DAInitialize () {
 	struct DynamicArray* da = malloc(sizeof(struct DynamicArray*));;
@@ -63,7 +64,7 @@ void DAAdd (int i, int x, struct DynamicArray* da) {
 void DAAppend (int x, struct DynamicArray* da) {
 	DAAdd(da->n, x, da);
 }
-int DARemove (int i, struct DynamicArray* da) {
+int DARemoveByIdx (int i, struct DynamicArray* da) {
 	int x = da->a[(da->j+1)%da->l];
 	if(i < da->n/2) { 
 		// Shift a[0], ..., a[i-1] right.
@@ -85,6 +86,10 @@ int DARemove (int i, struct DynamicArray* da) {
 }
 
 void DAPrint (struct DynamicArray* da) {
+	if(da == NULL) {
+		printf("DynamicArray is null.\n");
+		return;
+	}
 	printf("n = %d, a.length = %d, j = %d\n", da->n, da->l, da->j);
 	for(int i = 0; i < da->n; i++) {
 		printf("%d ", DAGet(i, da));
@@ -105,7 +110,12 @@ void DATest () {
 	DAAppend(1, da);
 	DAAppend(9, da);
 	DAAppend(1, da);
+	DAAppend(5, da);
 	DASort(da);
+	DAPrint(da);
+	DAAppendSorted(20, da);
+	DAPrint(da);
+	DAAppendSorted(5, da);
 	DAPrint(da);
 
 	DAAppend(-1, db);
@@ -115,10 +125,10 @@ void DATest () {
 	DAAppend(-2, db);
 	DAAppend(3, db);
 	DAAppend(-3, db);
-	DASort(db);
+	//DASort(db);
 	DAPrint(db);
 
-	struct DynamicArray* dc = DAUnion(da, db);
+	struct DynamicArray* dc = DAUnion(da, db, true);
 	DAPrint(dc);
 	DAPrint(da);
 	DAPrint(db);
@@ -142,12 +152,21 @@ struct DynamicArray* DACopy (struct DynamicArray* da) {
 	return db;
 }
 
-struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db) {
-	// This function assumes that both da and db are sorted (it does not 
-	// assume that j is 0).
+struct DynamicArray* DAUnion (struct DynamicArray* das, struct DynamicArray* dbs, bool isSorted) {
 	// It returns a new (sorted) DynamicArray containing _a unique_ copy of each
 	// element in da and db.
 	// e.g.: [1 1 3] union [1 3 3 5] will return [1 3 5] 
+	struct DynamicArray* da;	
+	struct DynamicArray* db;	
+	if(isSorted) {
+		da = das;
+		db = dbs;
+	} else {
+		da = DACopy(das);
+		DASort(da);
+		db = DACopy(dbs);
+		DASort(db);
+	}
 	struct DynamicArray *ret = DAInitialize();
 
 	DAAppend(INT_MAX, da);		// Sentinel.
@@ -166,16 +185,74 @@ struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db) 
 		}
 		DAAppend(min, ret);
 	}
-	DARemove(da->n, da);
-	DARemove(db->n, db);
-	DARemove(ret->n, ret);
+	DARemoveByIdx(da->n, da);
+	DARemoveByIdx(db->n, db);
+	DARemoveByIdx(ret->n, ret);
+	if(!isSorted) {
+		DADelete(da);
+		DADelete(db);
+	}
 	return ret;
 }
 
-int compareFunction (const void *a, const void *b) {
-	// Compare function to be used with qsort to sort a list of
-	// integers.
-	int *x = (int *) a;
-	int *y = (int *) b;
-	return *x - *y;
+int DAGetIdx (int x, struct DynamicArray* da) {
+	for(int i = 0; i < da->n; i++) {
+		if(DAGet(i, da) == x) {
+			return i;
+		}
+	}
+	return -1;
 }
+
+int DARemoveElement(int x, struct DynamicArray* da) {
+	return DARemoveByIdx(DAGetIdx(x, da), da);	
+}
+
+void DAAppendSorted (int x, struct DynamicArray* da) {
+	// Append element to a sorted DA and keep it sorted;
+	// Uses binary search.
+	
+	int left = 0, right = DASize(da)-1;
+
+	if(x <= DAGet(left, da)) {
+		DAAdd(left, x, da);
+		return;
+	}
+	if(x >= DAGet(right, da)) {
+		DAAdd(right+1, x, da);
+		return;
+	}
+
+	int mid = (left+right)/2;
+	int valMid;
+	while(left < right) {
+		valMid = DAGet(mid, da);
+		if(x == valMid) {
+			DAAdd(mid+1, x, da);
+			return;
+		} 
+		
+		if(x > valMid && x < DAGet(mid+1, da)) {
+			DAAdd(mid+1, x, da);
+			return;
+		} 
+
+		if(x < valMid && x > DAGet(mid+1, da)) {
+			DAAdd(mid, x, da);
+			return;
+		} 
+
+		if(x > valMid) {
+			left = mid;
+			mid = (right+left)/2;
+			continue;
+		}
+		if(x < valMid) {
+			right = mid;
+			mid = (right+left)/2;
+		}
+	}
+	printf("Something went wrong in DAAppendSorted.\n");
+	return;
+}
+

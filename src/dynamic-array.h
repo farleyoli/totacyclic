@@ -18,7 +18,7 @@ void DAResize(struct DynamicArray* da);
 
 void DAAdd (int i, int x, struct DynamicArray* da); 
 
-int DARemove (int i, struct DynamicArray* da);
+int DARemoveByIdx (int i, struct DynamicArray* da);
 
 void DAPrint (struct DynamicArray* da);
 
@@ -30,9 +30,16 @@ struct DynamicArray* DADifference (struct DynamicArray* da, struct DynamicArray*
 
 struct DynamicArray* DACopy (struct DynamicArray* da);
 
-int compareFunction (const void *a, const void *b);
+struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db, bool isSorted);
 
-struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db);
+void DAAppend (int x, struct DynamicArray* da);
 
 int DASize (struct DynamicArray* da);
+
+int DAGetIdx (int x, struct DynamicArray* da);
+
+int DARemoveElement(int x, struct DynamicArray* da);
+
+void DAAppendSorted (int x, struct DynamicArray* da);
+
 #endif

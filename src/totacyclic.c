@@ -136,7 +136,6 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
 	computeLexOrder(u, v, undir);
-	printf("debug!\n");fflush(stdout);
 
 	int *EF = NULL;
 	int sizeEF = 0;
@@ -193,7 +192,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 
 		for(j = 0; j < sizeBuf; j++) {
-			printOrientation(prevBuffer -> orient);fflush(stdout);
+			//printOrientation(prevBuffer -> orient);fflush(stdout);
 			tempOr1 = copyOrientation(prevBuffer -> orient);
 			trav = prevBuffer -> node;
 			tempOr2 = copyOrientation(tempOr1);
@@ -211,15 +210,6 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				EF = computeEliminationFront(tempOr1, &sizeEF);	
 			}
 
-			if(sizeEF > 3) {
-				//printf("Orientation before: \n");
-				//printOrientation(tempOr1);
-				temp = tempOr1;	
-				tempOr1 = getReachabilityOrientation(tempOr1, EF, sizeEF);
-				deleteOrientation(temp);
-				//printf("Orientation after: \n");
-				//printOrientation(tempOr1);
-			}
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
 
 
@@ -239,15 +229,6 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 				continue;
 			}
 
-			if(sizeEF > 3) {
-				//printf("Orientation before:\n");
-				//printOrientation(tempOr2);
-				temp = tempOr2;	
-				tempOr2 = getReachabilityOrientation(tempOr2, EF, sizeEF);
-				deleteOrientation(temp);
-				//printf("Orientation after:\n");
-				//printOrientation(tempOr2);
-			}
 
 			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
 
@@ -374,9 +355,6 @@ void testBufferList() {
 
 
 int main() {
-	DATest();
-	return 0;
-
 	srand(time(0));
 
 	//int n = 10;
@@ -405,7 +383,7 @@ int main() {
 		orient = importFromFile(fileName);
 		//orient = createCompleteGraph(12);
 		//bdd = createBDD(orient);
-		bdd = createCycleBDD(5);
+		bdd = createCompleteBDD(10);
 		// TODO: fix memory related to Stack
 		testStack(bdd);
 		memset(fileName, 0, sizeof(fileName));
