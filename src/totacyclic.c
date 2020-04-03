@@ -121,7 +121,6 @@ void printBuffer(struct OrientBuffer *b) {
 
 
 struct BDDNode *createBDD(struct Orientation *undir) {
-	/* TODO: finish this */
 	/* the order of the vertices is the natural one */
 	int i, j, m, sizeBuf;
 	struct Orientation *tempOr1 = NULL;
@@ -131,7 +130,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 	struct OrientBuffer *prevBuffer = nextBuffer;
 	struct OrientBuffer *InitPrevBuffer = NULL;
 	m = undir -> m;
-	printf("m = %d\n", m);
+	//printf("m = %d\n", m);
 
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
@@ -148,7 +147,7 @@ struct BDDNode *createBDD(struct Orientation *undir) {
 
 	for (i = 0; i < m; i++) { 
 		/* construct (i+1)-th level from i-th level */
-		printf("%d/%d\n", i, m);
+		//printf("%d/%d\n", i, m);
 
 		nextBuffer = NULL;	/* buffer for (i+1)-th level */
 		sizeBuf = sizeBuffer(prevBuffer);
@@ -364,8 +363,9 @@ int main() {
 	//struct BDDNode *bdd = createERBDD(12, 0.35);
 	//struct BDDNode *bdd = createCycleBDD(1000);
 	//testEdgeOrder();
-	int n;
-	scanf("%d", &n);
+	
+	//int n;
+	//scanf("%d", &n);
 
 	
 	struct Orientation *orient;
@@ -374,24 +374,29 @@ int main() {
 	char fileName[256] = "";
 	char num[32] = "";
 	struct BDDNode *bdd;
-	int i = 1;
-	//for(int i = 0; i < 10; i++) {
+	for(int i = 0; i < 20; i++) {
+		printf("%d\n", i);
 		sprintf(num, "%d", i+1);
 		strcat(fileName, fileNameBase);
 		strcat(fileName, num);
 		strcat(fileName, fileNameEnding);
 		orient = importFromFile(fileName);
-		//orient = createCompleteGraph(12);
-		//bdd = createBDD(orient);
+		//printOrientation(orient);fflush(stdout);
+
 		clock_t t; 
 		t = clock(); 
-		bdd = createCompleteBDD(n);
+
+		bdd = createBDD(orient);
+		//bdd = createCompleteBDD(i);
+
 		t = clock() - t; 
 		double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
-		// TODO: fix memory related to Stack
+		//printf("It took %f seconds to create the BDD \n", time_taken);
+		printf("%f\n", time_taken);
 		testStack(bdd);
 		memset(fileName, 0, sizeof(fileName));
-	//}
-	printf("It took %f seconds to create the BDD \n", time_taken);
+		printf("\n");
+		deleteBDD(bdd);
+	}
 	return 0;
 }

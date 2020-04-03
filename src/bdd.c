@@ -28,21 +28,26 @@ struct TOStack *createStack () {
 	return s;
 }
 
+void deleteTOStack (struct TOStack *s) {
+	free(s->nodeArray);	
+	free(s);
+}
+
 void addTOStack (struct TOStack *s, struct TONode e) {
 	// add e to s
-	const int INITIAL_LENGTH = 30;
+	const int INITIAL_LENGTH = 4;
 	if (s -> nodeArray == NULL) {
 		//printf("debug1\n");fflush(stdout);
 		s -> n = 0;
-		s -> nodeArray = malloc(sizeof(struct TONode) * INITIAL_LENGTH);
+		s -> nodeArray = calloc(INITIAL_LENGTH, sizeof(struct TONode));
 		s -> nodeArray[(s -> n)++] = e;
 		s -> l = INITIAL_LENGTH;
 		return;
 	}
 
-	if (s -> n == s -> l) {
-		// resize	
-		//printf("debug2\n");fflush(stdout);
+	if (s -> n == s -> l-1) {
+		// Resize	
+		// printf("debug2\n");fflush(stdout);
 		struct TONode *temp = s -> nodeArray;
 		s -> l = 2 * (s -> l);
 		s -> nodeArray = malloc(sizeof(struct TONode) * (s -> l));
@@ -103,12 +108,28 @@ struct TOStack *constructTOStack (struct BDDNode *bdd) {
 	return retVal;
 }
 
-void delOneBDDNode (struct BDDNode *node) {
-	if (node != NULL) {
-		free (node -> lo);
-		free (node -> hi);
-		free (node);
+void deleteBDDAux (struct BDDNode *node, bool initialState) {
+	if(node->isVisited != initialState) {
+		return;
 	}
+	node->isVisited = !initialState;
+	struct BDDNode *left = node->lo;
+	struct BDDNode *right = node->hi;
+	free(node);
+	if(left != NULL && left->isVisited == initialState) {
+		deleteBDDAux(left, initialState);
+	}
+	if(right != NULL && right->isVisited == initialState) {
+		deleteBDDAux(right, initialState);
+	}
+
+}
+
+void deleteBDD (struct BDDNode *node) {
+	// This is the state of a node if it hasn't been visited yet.
+	bool initialState = node->isVisited;
+
+	deleteBDDAux(node, initialState);
 }
 
 int sizeOfBDD (struct BDDNode *node) {
@@ -130,7 +151,7 @@ int *computeProfile(struct TOStack *s, int *length) {
 	//return value.
 
 
-	// find depth of BDD
+	// Find depth of BDD
 	int max = -2;
 	for(int i = 0; i < s->n; i++) {
 		if((s->nodeArray[i].bdd->v) > max) {
@@ -143,9 +164,6 @@ int *computeProfile(struct TOStack *s, int *length) {
 
 	// allocate memory for retVal
 	int *retVal = (int *) calloc(max, sizeof(int));
-	for(int i = 0; i < (s->n); i++) {
-		retVal[i] = 0;
-	}
 
 	for(int i = 0; i < (s->n); i++) {
 		if(s->nodeArray[i].bdd->v == -1) {
@@ -165,18 +183,15 @@ int *computeProfile(struct TOStack *s, int *length) {
 void testStack(struct BDDNode *bdd) {
 	struct TOStack *s = constructTOStack(bdd);	
 	int n = s->n;
-	printf("Total number of nodes is %d.\n", n);
-//	printf("The sequence of levels is:\n");
-//	for(int i = 0; i < n; i++) {
-//		printf("%d ", s->nodeArray[i].bdd->v);
-//	}
-//	printf("\n");
+	//printf("Total number of nodes is %d.\n", n);
+	printf("%d\n", n);
 	int length = 0;
 	int *profile;
 	profile = computeProfile(s, &length);
-	printf("The profile of the BDD is (length = %d):\n", length);
+	//printf("The profile of the BDD is (length = %d):\n", length);
 	for(int i = 0; i < length; i++) {
 		printf("%d ", profile[i]);
 	}
 	printf("\n");
+	deleteTOStack(s);
 }

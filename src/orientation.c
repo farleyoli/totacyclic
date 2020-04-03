@@ -333,7 +333,7 @@ jump:;
 	} else if(isSrcInEFInOriginal) {
 		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pSrcIdx]);
 		DAAddSorted(dest,orientation->reachTo[srcIdx]);
-	} else {
+	} else if(isDestInEFInOriginal) {
 		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pDestIdx]);
 		DAAddSorted(dest,orientation->reachTo[srcIdx]);
 	}
@@ -347,7 +347,7 @@ jump:;
 	} else if(isSrcInEFInOriginal) {
 		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pSrcIdx]);
 		DAAddSorted(src,orientation->reachFrom[destIdx]);
-	} else {
+	} else if(isDestInEFInOriginal) {
 		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pDestIdx]);
 		DAAddSorted(src,orientation->reachFrom[destIdx]);
 	}
@@ -421,21 +421,11 @@ void deleteOrientation(struct Orientation *orientation) {
 	for (int i = 0; i < n; i++) {
 		deleteList(orientation, i);
 	}
-	if(orientation->adjList != NULL) {
-		free (orientation -> adjList);
-	}
-	if(orientation != NULL) {
-		free (orientation);
-	}
-	if(orientation->EF != NULL) {
-		free(orientation->EF);
-	}
-	if(orientation->reachTo != NULL) {
-		free(orientation->reachTo);
-	}
-	if(orientation->reachFrom != NULL) {
-		free(orientation->reachFrom);
-	}
+	free (orientation -> adjList);
+	free(orientation->EF);
+	free(orientation->reachTo);
+	free(orientation->reachFrom);
+	free(orientation);
 }
 
 bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *visited) {

@@ -8,7 +8,7 @@
 #include "general-utils.h"
 
 struct DynamicArray* DAInitialize () {
-	struct DynamicArray* da = malloc(sizeof(struct DynamicArray*));;
+	struct DynamicArray* da = malloc(sizeof(struct DynamicArray));;
 	da->n = 0;			
 	da->l = 5;				// Initial value of 5.
 	da->a = calloc(da->l,  sizeof(int));

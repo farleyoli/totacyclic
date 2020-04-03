@@ -2,8 +2,8 @@
 #define DARRAY
 
 struct DynamicArray {
-	int n; 			// Current number of nodes in the array.
 	int* a;			// Arrray to store the elements.
+	int n; 			// Current number of nodes in the array.
 	int l;			// The length of the array a.
 	int j;			// Index of the first element.
 };
