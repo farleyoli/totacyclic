@@ -11,7 +11,8 @@ struct BDDNode {
 struct TONode {
 	// Node for the array representing a topological order
 	// of a BDD.
-	struct BDDNode *bdd;
+	//struct BDDNode *bdd;
+	int v;
 	int lo;	
 	int hi;	
 };

@@ -374,7 +374,7 @@ int main() {
 	char fileName[256] = "";
 	char num[32] = "";
 	struct BDDNode *bdd;
-	for(int i = 0; i < 20; i++) {
+	for(int i = 5; i < 7; i++) {
 		printf("%d\n", i);
 		sprintf(num, "%d", i+1);
 		strcat(fileName, fileNameBase);

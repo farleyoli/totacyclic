@@ -67,33 +67,32 @@ void addTOStack (struct TOStack *s, struct TONode e) {
 	s -> nodeArray[(s -> n)++] = e;
 }
 
-struct TONode popTOStack(struct TOStack *s) {
-	//TODO (not finished)
-	// eliminates (and returns) right-most elemenet from stack
-	struct TONode retVal;
-	return retVal;
-}
-
 struct TONode createTONode (struct BDDNode *bdd) {
 	// returns a TONode pointing to bdd
 	// lo and hi values are set to -1
 	struct TONode retVal; 
-	retVal.bdd = bdd;
+	retVal.v = -1;
 	retVal.lo = -1;
 	retVal.hi = -1;
 	return retVal;
 }
 
-void constructTOStackAux (struct BDDNode *bdd, struct TOStack *s) {
+void constructTOStackAux (struct BDDNode *bdd, struct TOStack *s, int* k) {
+	int kCurrent = *k;
 	bdd -> isVisited = true;
 	//printf("v = %d\n", bdd->v);
 	struct TONode e = createTONode(bdd);
 	addTOStack(s, e);
+	s->nodeArray[kCurrent].v = bdd->v;
 	if ((bdd->lo != NULL) && !(bdd -> lo -> isVisited)) {
-		constructTOStackAux(bdd -> lo, s);
+		(*k)++;
+		s->nodeArray[kCurrent].lo = (*k);
+		constructTOStackAux(bdd -> lo, s, k);
 	}
 	if ((bdd->hi != NULL) && !(bdd -> hi -> isVisited)) {
-		constructTOStackAux(bdd -> hi, s);
+		(*k)++;
+		s->nodeArray[kCurrent].hi = (*k);
+		constructTOStackAux(bdd -> hi, s, k);
 	}
 }
 
@@ -101,9 +100,9 @@ struct TOStack *constructTOStack (struct BDDNode *bdd) {
 	// Receives a BDD and constructs stack with topological ordering
 	// of its nodes using DFS.
 	// Attention: the lo and hi fields are not filled here.
-	
+	int k = 0;	
 	struct TOStack *retVal = createStack();
-	constructTOStackAux(bdd, retVal);	
+	constructTOStackAux(bdd, retVal, &k);	
 	
 	return retVal;
 }
@@ -154,8 +153,8 @@ int *computeProfile(struct TOStack *s, int *length) {
 	// Find depth of BDD
 	int max = -2;
 	for(int i = 0; i < s->n; i++) {
-		if((s->nodeArray[i].bdd->v) > max) {
-			max = s->nodeArray[i].bdd->v;
+		if((s->nodeArray[i].v) > max) {
+			max = s->nodeArray[i].v;
 		}
 	}
 
@@ -166,12 +165,12 @@ int *computeProfile(struct TOStack *s, int *length) {
 	int *retVal = (int *) calloc(max, sizeof(int));
 
 	for(int i = 0; i < (s->n); i++) {
-		if(s->nodeArray[i].bdd->v == -1) {
+		if(s->nodeArray[i].v == -1) {
 			retVal[max-1]++;
 			continue;
 		}
 		//printf("%d, ", s->nodeArray[i].bdd->v);
-		retVal[(s->nodeArray[i].bdd->v)-1]++;
+		retVal[(s->nodeArray[i].v)-1]++;
 	}	
 
 	*length = max;
@@ -183,12 +182,20 @@ int *computeProfile(struct TOStack *s, int *length) {
 void testStack(struct BDDNode *bdd) {
 	struct TOStack *s = constructTOStack(bdd);	
 	int n = s->n;
+	printf("The TOStack is the following:\n");
+	for(int i = 0; i < n; i++) {
+		printf("Node #%d has v = %d, lo = %d, and hi = %d\n",
+				i,
+				s->nodeArray[i].v,
+				s->nodeArray[i].lo,
+				s->nodeArray[i].hi);
+	}
 	//printf("Total number of nodes is %d.\n", n);
 	printf("%d\n", n);
 	int length = 0;
 	int *profile;
 	profile = computeProfile(s, &length);
-	//printf("The profile of the BDD is (length = %d):\n", length);
+	printf("The profile of the BDD is (length = %d):\n", length);
 	for(int i = 0; i < length; i++) {
 		printf("%d ", profile[i]);
 	}
