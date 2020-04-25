@@ -8,32 +8,32 @@
 #include "dynamic-array.h"
 #include "general-utils.h"
 
-struct Node *createNode(int v) {
-	struct Node *newNode = (struct Node *) malloc(sizeof(struct Node));
-	newNode -> v = v;
-	newNode -> next = NULL;
-	newNode -> orientation = 0;
-	return newNode;
+struct Node *create_node(int v) {
+	struct Node *new_node = (struct Node *) malloc(sizeof(struct Node));
+	new_node -> v = v;
+	new_node -> next = NULL;
+	new_node -> orientation = 0;
+	return new_node;
 }
 
 
-struct Orientation *createOrientation (int noV) {
+struct Orientation *create_orientation (int noV) {
 	struct Orientation *orientation = malloc(sizeof(struct Orientation));
 	orientation -> n = noV;
 	orientation -> m = 0;
-	orientation -> adjList = malloc(noV * sizeof(struct Node *));
+	orientation -> adj_list = malloc(noV * sizeof(struct Node *));
 	for (int i = 0; i < noV; i++) {
-		orientation -> adjList[i] = NULL;
+		orientation -> adj_list[i] = NULL;
 	}
-	orientation -> sizeEF = -1;
-	orientation -> reachTo  = NULL;
-	orientation -> reachFrom = NULL;
-	orientation -> EF = NULL;
+	orientation -> size_ef = -1;
+	orientation -> reach_to  = NULL;
+	orientation -> reach_from = NULL;
+	orientation -> ef = NULL;
 	return orientation;
 }
 
 
-void appendNode (struct Node **list, struct Node *node, int v) {
+void append_node (struct Node **list, struct Node *node, int v) {
 	/* list: adjacency list of the orientation */
 	/* node: node to be added*/
 	/* v: index for the list*/
@@ -57,20 +57,20 @@ void appendNode (struct Node **list, struct Node *node, int v) {
 	}
 }
 
-void addEdge (struct Orientation *orientation, int src, int dest) {
-	struct Node *newNode = createNode(dest);
-	appendNode(orientation -> adjList, newNode, src);
-	newNode = createNode(src);
-	appendNode(orientation -> adjList, newNode, dest);
+void add_edge (struct Orientation *orientation, int src, int dest) {
+	struct Node *new_node = create_node(dest);
+	append_node(orientation -> adj_list, new_node, src);
+	new_node = create_node(src);
+	append_node(orientation -> adj_list, new_node, dest);
 	(orientation -> m)++;
 }
 
-void printOrientation (struct Orientation *orientation) {
+void print_orientation (struct Orientation *orientation) {
 	int v;
 	struct Node *temp;
 	printf("------\n");
 	for (v = 0; v < orientation -> n; v++) {
-		temp = orientation -> adjList[v];
+		temp = orientation -> adj_list[v];
 		printf("\n Adjacency list of vertex %d\n ", v);
 		while (temp != NULL) {
 			printf("%d ", temp -> v);
@@ -80,40 +80,40 @@ void printOrientation (struct Orientation *orientation) {
 		}
 		printf("\n");
 	}
-	if(orientation->sizeEF > 0) printf("EF: ");
-	DAPrint(orientation->EF);
-	if(orientation->sizeEF > 0) printf("\n");
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		printf("reachFrom");
-		printf("[%d] (EF[%d] = %d): ", i, i, DAGet(i, orientation->EF));
-		DAPrint(orientation->reachFrom[i]);
+	if(orientation->size_ef > 0) printf("ef: ");
+	da_print(orientation->ef);
+	if(orientation->size_ef > 0) printf("\n");
+	for(int i = 0; i < orientation->size_ef; i++) {
+		printf("reach_from");
+		printf("[%d] (ef[%d] = %d): ", i, i, da_get(i, orientation->ef));
+		da_print(orientation->reach_from[i]);
 		printf("\n");
 	}
 	printf("\n");
-	for(int i = 0; i < orientation->sizeEF; i++) {
-	printf("reachTo  ");
-		printf("[%d] (EF[%d] = %d): ", i, i, DAGet(i, orientation->EF));
-		DAPrint(orientation->reachTo[i]);
+	for(int i = 0; i < orientation->size_ef; i++) {
+	printf("reach_to  ");
+		printf("[%d] (ef[%d] = %d): ", i, i, da_get(i, orientation->ef));
+		da_print(orientation->reach_to[i]);
 		printf("\n");
 	}
 
 	printf("------\n");
 }
 
-void deleteEdgeAux (struct Orientation *orientation, int src, int dest) {
+void delete_edge_aux (struct Orientation *orientation, int src, int dest) {
 	/* deletes Node dest from list of src*/
 	/* Attention: must run twice (both directions) for undirected*/
 	struct Node *node, *next, *before;
 
-	if (orientation -> adjList[src] == NULL) {
+	if (orientation -> adj_list[src] == NULL) {
 		printf("error, the node isn't in the list\n");
 		return;
 	}
 
 
-	before = orientation -> adjList[src];
+	before = orientation -> adj_list[src];
 	if (before -> v == dest) {
-		orientation -> adjList[src] = before -> next;
+		orientation -> adj_list[src] = before -> next;
 		free(before);
 		return;
 	}
@@ -129,15 +129,15 @@ void deleteEdgeAux (struct Orientation *orientation, int src, int dest) {
 	free(node);
 }
 
-void deleteEdge (struct Orientation *orientation, int src, int dest) {
+void delete_edge (struct Orientation *orientation, int src, int dest) {
 	/* deletes Node dest from list of src*/
-	deleteEdgeAux(orientation, src, dest);
-	deleteEdgeAux(orientation, dest, src);
+	delete_edge_aux(orientation, src, dest);
+	delete_edge_aux(orientation, dest, src);
 }
 
-bool isAdjacentToDirectedEdge(struct Orientation *orient, int v) {
+bool is_adjacent_to_directed_edge(struct Orientation *orient, int v) {
 	// Returns true iff v is adjacent to some oriented edge.
-	struct Node *p = orient->adjList[v]; 
+	struct Node *p = orient->adj_list[v]; 
 	while(p != NULL) {
 		if(p->orientation == 1 || p->orientation == -1) {
 			return true;
@@ -147,9 +147,9 @@ bool isAdjacentToDirectedEdge(struct Orientation *orient, int v) {
 	return false;
 }
 
-bool isAdjacentToUndirectedEdge(struct Orientation *orient, int v) {
+bool is_adjacent_to_undirected_edge(struct Orientation *orient, int v) {
 	// Returns true iff v is adjacent to some undirected edge.
-	struct Node *p = orient->adjList[v]; 
+	struct Node *p = orient->adj_list[v]; 
 	while(p != NULL) {
 		if(p->orientation == 0) {
 			return true;
@@ -159,23 +159,23 @@ bool isAdjacentToUndirectedEdge(struct Orientation *orient, int v) {
 	return false;
 }
 
-void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient from src to dest*/ struct Node *node = orientation -> adjList[src];
-	int sizeEFOriginal = orientation->sizeEF;
-	bool isSrcInEFInOriginal;
-	bool isDestInEFInOriginal;
+void orient_edge (struct Orientation *orientation, int src, int dest) { /* orient from src to dest*/ struct Node *node = orientation -> adj_list[src];
+	int size_ef_original = orientation->size_ef;
+	bool is_src_in_ef_in_original;
+	bool is_dest_in_ef_in_original;
 
-	if(isAdjacentToDirectedEdge(orientation, src) &&
-			isAdjacentToUndirectedEdge(orientation, src)) {
-		isSrcInEFInOriginal = true;
+	if(is_adjacent_to_directed_edge(orientation, src) &&
+			is_adjacent_to_undirected_edge(orientation, src)) {
+		is_src_in_ef_in_original = true;
 	} else {
-		isSrcInEFInOriginal = false;
+		is_src_in_ef_in_original = false;
 	}
 
-	if(isAdjacentToDirectedEdge(orientation, dest) &&
-			isAdjacentToUndirectedEdge(orientation, dest)) {
-		isDestInEFInOriginal = true;
+	if(is_adjacent_to_directed_edge(orientation, dest) &&
+			is_adjacent_to_undirected_edge(orientation, dest)) {
+		is_dest_in_ef_in_original = true;
 	} else {
-		isDestInEFInOriginal = false;
+		is_dest_in_ef_in_original = false;
 	}
 
 	while(node -> v != dest) 
@@ -184,259 +184,259 @@ void orientEdge (struct Orientation *orientation, int src, int dest) { /* orient
 	node -> orientation = 1;
 
 
-	node = orientation -> adjList[dest];
+	node = orientation -> adj_list[dest];
 	while(node -> v != src)
 		node = node -> next;
 	node -> orientation = -1;
 
-	// From here on, we refresh information about EF.
+	// From here on, we refresh information about ef.
 	
-	if(orientation->reachFrom == NULL) {
+	if(orientation->reach_from == NULL) {
 		// This is the first edge to be oriented.
-		orientation -> sizeEF = 2;
-		orientation -> EF = DAInitialize();
+		orientation -> size_ef = 2;
+		orientation -> ef = da_initialize();
 		if(src < dest) {
-			DAAppend(src, orientation->EF);
-			DAAppend(dest, orientation->EF);
+			da_append(src, orientation->ef);
+			da_append(dest, orientation->ef);
 		} else {
-			DAAppend(dest, orientation->EF);
-			DAAppend(src, orientation->EF);
+			da_append(dest, orientation->ef);
+			da_append(src, orientation->ef);
 		}
 
-		assert(orientation->sizeEF == DASize(orientation->EF));
-		orientation -> reachFrom = 
-			malloc(orientation -> sizeEF * sizeof(struct DynamicArray *));
-		orientation -> reachTo = 
-			malloc(orientation -> sizeEF * sizeof(struct DynamicArray *));
+		assert(orientation->size_ef == da_size(orientation->ef));
+		orientation -> reach_from = 
+			malloc(orientation -> size_ef * sizeof(struct DynamicArray *));
+		orientation -> reach_to = 
+			malloc(orientation -> size_ef * sizeof(struct DynamicArray *));
 
-		for(int i = 0; i < orientation->sizeEF; i++) {
-			orientation -> reachFrom[i] = DAInitialize();
-			orientation -> reachTo[i] = DAInitialize();
+		for(int i = 0; i < orientation->size_ef; i++) {
+			orientation -> reach_from[i] = da_initialize();
+			orientation -> reach_to[i] = da_initialize();
 		}
-		int EFIdxSrc = DAGetIdx(src, orientation->EF);
-		int EFIdxDest = DAGetIdx(dest, orientation->EF);
-		assert(EFIdxSrc != -1 && EFIdxDest != -1);
+		int ef_idx_src = da_get_idx(src, orientation->ef);
+		int ef_idx_dest = da_get_idx(dest, orientation->ef);
+		assert(ef_idx_src != -1 && ef_idx_dest != -1);
 
-		DAAppend(src, orientation->reachFrom[EFIdxDest]);
-		DAAppend(dest, orientation->reachTo[EFIdxSrc]);
+		da_append(src, orientation->reach_from[ef_idx_dest]);
+		da_append(dest, orientation->reach_to[ef_idx_src]);
 		return;
 	}
 
 	// This is NOT the first edge to be oriented.
 	// Remember: the only elements whose "is in" relation with respect
-	// to the EF can change are src and dest;
+	// to the ef can change are src and dest;
 	
-	// Define the following variables (with respect to new EF)
-	bool isSrcInEF;
-	bool isDestInEF;
+	// Define the following variables (with respect to new ef)
+	bool is_src_in_ef;
+	bool is_dest_in_ef;
 
-	if(isAdjacentToDirectedEdge(orientation, src) &&
-			isAdjacentToUndirectedEdge(orientation, src)) {
-		isSrcInEF = true;
+	if(is_adjacent_to_directed_edge(orientation, src) &&
+			is_adjacent_to_undirected_edge(orientation, src)) {
+		is_src_in_ef = true;
 	} else {
-		isSrcInEF = false;
+		is_src_in_ef = false;
 	}
 
-	if(isAdjacentToDirectedEdge(orientation, dest) &&
-			isAdjacentToUndirectedEdge(orientation, dest)) {
-		isDestInEF = true;
+	if(is_adjacent_to_directed_edge(orientation, dest) &&
+			is_adjacent_to_undirected_edge(orientation, dest)) {
+		is_dest_in_ef = true;
 	} else {
-		isDestInEF = false;
+		is_dest_in_ef = false;
 	}
 
 	// Update elimination front.
-	bool isThereChange[4]; 	// Is there any change in EF?
-	for(int i = 0; i < 4; i++) isThereChange[i] = false;
-	if(isSrcInEF && !isSrcInEFInOriginal) {
-		orientation->sizeEF++;
-		isThereChange[0] = true;
+	bool is_there_change[4]; 	// Is there any change in ef?
+	for(int i = 0; i < 4; i++) is_there_change[i] = false;
+	if(is_src_in_ef && !is_src_in_ef_in_original) {
+		orientation->size_ef++;
+		is_there_change[0] = true;
 	}
-	if(!isSrcInEF && isSrcInEFInOriginal) {
-		orientation->sizeEF--;
-		isThereChange[1] = true;
+	if(!is_src_in_ef && is_src_in_ef_in_original) {
+		orientation->size_ef--;
+		is_there_change[1] = true;
 	}
-	if(isDestInEF && !isDestInEFInOriginal) {
-		orientation->sizeEF++;
-		isThereChange[2] = true;
+	if(is_dest_in_ef && !is_dest_in_ef_in_original) {
+		orientation->size_ef++;
+		is_there_change[2] = true;
 	}
-	if(!isDestInEF && isDestInEFInOriginal) {
-		orientation->sizeEF--;
-		isThereChange[3] = true;
+	if(!is_dest_in_ef && is_dest_in_ef_in_original) {
+		orientation->size_ef--;
+		is_there_change[3] = true;
 	}
-	bool wasThereChangeInEF = (isThereChange[0] || 
-			isThereChange[1] || isThereChange[2] || isThereChange[3]);
+	bool was_there_change_in_ef = (is_there_change[0] || 
+			is_there_change[1] || is_there_change[2] || is_there_change[3]);
 
-	struct DynamicArray* prevEF = orientation->EF;
+	struct DynamicArray* prev_ef = orientation->ef;
 
-	if(!wasThereChangeInEF) {
-		// There was no change in the EF, so we don't need
+	if(!was_there_change_in_ef) {
+		// There was no change in the ef, so we don't need
 		// to update it.
 		goto jump;
 	}
 
-	orientation->EF = DACopy(prevEF);
+	orientation->ef = da_copy(prev_ef);
 
-	// The only memberships of EF that can possibly change
+	// The only memberships of ef that can possibly change
 	// are src and dest, and we can decide which of them have changed
 	// it using the variables as defined above.
 	
-	if(isSrcInEF && !isSrcInEFInOriginal) {
-		DAAddSorted(src, orientation->EF);
+	if(is_src_in_ef && !is_src_in_ef_in_original) {
+		da_add_sorted(src, orientation->ef);
 	}
-	if(!isSrcInEF && isSrcInEFInOriginal) {
-		DARemoveElement(src, orientation->EF);
+	if(!is_src_in_ef && is_src_in_ef_in_original) {
+		da_remove_element(src, orientation->ef);
 	}
-	if(isDestInEF && !isDestInEFInOriginal) {
-		DAAddSorted(dest, orientation->EF);
+	if(is_dest_in_ef && !is_dest_in_ef_in_original) {
+		da_add_sorted(dest, orientation->ef);
 	}
-	if(!isDestInEF && isDestInEFInOriginal) {
-		DARemoveElement(dest, orientation->EF);
+	if(!is_dest_in_ef && is_dest_in_ef_in_original) {
+		da_remove_element(dest, orientation->ef);
 	}
 
 
 jump:;
-	// Update reachFrom and reachTo for src and dest.
+	// Update reach_from and reach_to for src and dest.
 	//
 	// First, we allocate the memory for the new ones.
-	assert(orientation->sizeEF == DASize(orientation->EF));
-	struct DynamicArray **originalReachFrom = orientation->reachFrom;
-	struct DynamicArray **originalReachTo = orientation->reachTo;
-	orientation->reachFrom = malloc(orientation->sizeEF * 
+	assert(orientation->size_ef == da_size(orientation->ef));
+	struct DynamicArray **original_reach_from = orientation->reach_from;
+	struct DynamicArray **originalReachTo = orientation->reach_to;
+	orientation->reach_from = malloc(orientation->size_ef * 
 			sizeof(struct DynamicArray*));
-	orientation->reachTo = malloc(orientation->sizeEF * 
+	orientation->reach_to = malloc(orientation->size_ef * 
 			sizeof(struct DynamicArray*));
 
 
-	for(int i = 0; i < orientation->sizeEF; i++) {
-		orientation->reachFrom[i] = DAInitialize();
-		orientation->reachTo[i] = DAInitialize();
+	for(int i = 0; i < orientation->size_ef; i++) {
+		orientation->reach_from[i] = da_initialize();
+		orientation->reach_to[i] = da_initialize();
 	}
 
-	// From here on, we update reachFrom and reachTo	
-	int srcIdx, destIdx, pSrcIdx, pDestIdx;		// p = previous
-	srcIdx = DAGetIdx(src, orientation->EF);	
-	destIdx = DAGetIdx(dest, orientation->EF);	
-	pSrcIdx = DAGetIdx(src, prevEF);	
-	pDestIdx = DAGetIdx(dest, prevEF);
+	// From here on, we update reach_from and reach_to	
+	int src_idx, dest_idx, p_src_idx, p_dest_idx;		// p = previous
+	src_idx = da_get_idx(src, orientation->ef);	
+	dest_idx = da_get_idx(dest, orientation->ef);	
+	p_src_idx = da_get_idx(src, prev_ef);	
+	p_dest_idx = da_get_idx(dest, prev_ef);
 	
-	if(isSrcInEF && isSrcInEFInOriginal) {
-		orientation->reachFrom[srcIdx] = DACopy(originalReachFrom[pSrcIdx]);
+	if(is_src_in_ef && is_src_in_ef_in_original) {
+		orientation->reach_from[src_idx] = da_copy(original_reach_from[p_src_idx]);
 	}
 
 
-	if(!isSrcInEF) {
+	if(!is_src_in_ef) {
 		;	
-	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
-		orientation->reachTo[srcIdx] = DAUnion(originalReachTo[pSrcIdx], 
-			originalReachTo[pDestIdx], true);
-		DAAddSorted(dest,orientation->reachTo[srcIdx]);
-	} else if(isSrcInEFInOriginal) {
-		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pSrcIdx]);
-		DAAddSorted(dest,orientation->reachTo[srcIdx]);
-	} else if(isDestInEFInOriginal) {
-		orientation->reachTo[srcIdx] = DACopy(originalReachTo[pDestIdx]);
-		DAAddSorted(dest,orientation->reachTo[srcIdx]);
+	} else if (is_src_in_ef_in_original && is_dest_in_ef_in_original) {
+		orientation->reach_to[src_idx] = da_union(originalReachTo[p_src_idx], 
+			originalReachTo[p_dest_idx], true);
+		da_add_sorted(dest,orientation->reach_to[src_idx]);
+	} else if(is_src_in_ef_in_original) {
+		orientation->reach_to[src_idx] = da_copy(originalReachTo[p_src_idx]);
+		da_add_sorted(dest,orientation->reach_to[src_idx]);
+	} else if(is_dest_in_ef_in_original) {
+		orientation->reach_to[src_idx] = da_copy(originalReachTo[p_dest_idx]);
+		da_add_sorted(dest,orientation->reach_to[src_idx]);
 	}
 
-	if(!isDestInEF) {
+	if(!is_dest_in_ef) {
 		;	
-	} else if (isSrcInEFInOriginal && isDestInEFInOriginal) {
-		orientation->reachFrom[destIdx] = DAUnion(originalReachFrom[pSrcIdx], 
-			originalReachFrom[pDestIdx], true);
-		DAAddSorted(src,orientation->reachFrom[destIdx]);
-	} else if(isSrcInEFInOriginal) {
-		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pSrcIdx]);
-		DAAddSorted(src,orientation->reachFrom[destIdx]);
-	} else if(isDestInEFInOriginal) {
-		orientation->reachFrom[destIdx] = DACopy(originalReachFrom[pDestIdx]);
-		DAAddSorted(src,orientation->reachFrom[destIdx]);
+	} else if (is_src_in_ef_in_original && is_dest_in_ef_in_original) {
+		orientation->reach_from[dest_idx] = da_union(original_reach_from[p_src_idx], 
+			original_reach_from[p_dest_idx], true);
+		da_add_sorted(src,orientation->reach_from[dest_idx]);
+	} else if(is_src_in_ef_in_original) {
+		orientation->reach_from[dest_idx] = da_copy(original_reach_from[p_src_idx]);
+		da_add_sorted(src,orientation->reach_from[dest_idx]);
+	} else if(is_dest_in_ef_in_original) {
+		orientation->reach_from[dest_idx] = da_copy(original_reach_from[p_dest_idx]);
+		da_add_sorted(src,orientation->reach_from[dest_idx]);
 	}
 
 
-	if(isDestInEF && isDestInEFInOriginal) {
-		orientation->reachTo[destIdx] = DACopy(originalReachTo[pDestIdx]);
+	if(is_dest_in_ef && is_dest_in_ef_in_original) {
+		orientation->reach_to[dest_idx] = da_copy(originalReachTo[p_dest_idx]);
 	}
 
-	assert(orientation->sizeEF == DASize(orientation->EF));
+	assert(orientation->size_ef == da_size(orientation->ef));
 	
-	for(int idx = 0; idx < orientation->sizeEF; idx++) {
-		int v = DAGet(idx, orientation->EF);
-		if (idx == srcIdx || idx == destIdx) {
+	for(int idx = 0; idx < orientation->size_ef; idx++) {
+		int v = da_get(idx, orientation->ef);
+		if (idx == src_idx || idx == dest_idx) {
 			continue;
 		}
-		int pIdx = DAGetIdx(v, prevEF);
-		assert(pIdx != -1);
-		orientation->reachFrom[idx] = DACopy(originalReachFrom[pIdx]);
-		if(DADoesContain(dest, orientation->reachFrom[idx], true)) {
-			DAAddSorted(src, orientation->reachFrom[idx]);
+		int p_idx = da_get_idx(v, prev_ef);
+		assert(p_idx != -1);
+		orientation->reach_from[idx] = da_copy(original_reach_from[p_idx]);
+		if(da_does_contain(dest, orientation->reach_from[idx], true)) {
+			da_add_sorted(src, orientation->reach_from[idx]);
 		}
-		orientation->reachTo[idx] = DACopy(originalReachTo[pIdx]);
-		if(DADoesContain(src, orientation->reachTo[idx], true)) {
-			DAAddSorted(dest, orientation->reachTo[idx]);
+		orientation->reach_to[idx] = da_copy(originalReachTo[p_idx]);
+		if(da_does_contain(src, orientation->reach_to[idx], true)) {
+			da_add_sorted(dest, orientation->reach_to[idx]);
 		}
 	}
 
 
-	// Free up memory of previous EF, reachFrom and reachTo.
-	if(wasThereChangeInEF) {
-		DADelete(prevEF);
+	// Free up memory of previous ef, reach_from and reach_to.
+	if(was_there_change_in_ef) {
+		da_delete(prev_ef);
 	}
-	for(int i = 0; i < sizeEFOriginal; i++) {
-		if(originalReachFrom[i] != NULL)
-			DADelete(originalReachFrom[i]);
+	for(int i = 0; i < size_ef_original; i++) {
+		if(original_reach_from[i] != NULL)
+			da_delete(original_reach_from[i]);
 		if(originalReachTo[i] != NULL)
-			DADelete(originalReachTo[i]);
+			da_delete(originalReachTo[i]);
 	}
-	if(originalReachFrom != NULL) {
-		free(originalReachFrom);
+	if(original_reach_from != NULL) {
+		free(original_reach_from);
 	}
 	if(originalReachTo != NULL) {
 		free(originalReachTo);
 	}
 }
 
-bool deleteInitialNode (struct Orientation *orientation, int v) {
-	/* Returns false iff adjList[v] is empty. */
+bool delete_initial_node (struct Orientation *orientation, int v) {
+	/* Returns false iff adj_list[v] is empty. */
 
-	struct Node *initial = orientation -> adjList[v];
+	struct Node *initial = orientation -> adj_list[v];
 	if (initial == NULL)
 		return false;
-	orientation -> adjList[v] = initial -> next;
+	orientation -> adj_list[v] = initial -> next;
 	free(initial);
 	return true;
 }
 
-void deleteList (struct Orientation *orientation, int v) {
-	// Deletes adjList[v].
+void delete_list (struct Orientation *orientation, int v) {
+	// Deletes adj_list[v].
 	// (OBS: for now, use only when deleting the orientation!)
 	
-	while(deleteInitialNode(orientation, v))
+	while(delete_initial_node(orientation, v))
 		;
 }
 
-void deleteOrientation(struct Orientation *orientation) {
+void delete_orientation(struct Orientation *orientation) {
 	// Frees memory used by orientation.
 	
 	int n = orientation -> n;
 	for (int i = 0; i < n; i++) {
-		deleteList(orientation, i);
+		delete_list(orientation, i);
 	}
-	free (orientation -> adjList);
-	free(orientation->EF);
-	free(orientation->reachTo);
-	free(orientation->reachFrom);
+	free (orientation -> adj_list);
+	free(orientation->ef);
+	free(orientation->reach_to);
+	free(orientation->reach_from);
 	free(orientation);
 }
 
-bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *visited) {
-	// Auxiliary function for isReachable function.
+bool is_reachable_aux(struct Orientation *orientation, int src, int dest, bool *visited) {
+	// Auxiliary function for is_reachable function.
 	
 	if (visited[src]) {
 		/*printf("already visited\n"); */
 		return false;
 	}
 	visited[src] = true;
-	struct Node *initial = orientation -> adjList[src];
+	struct Node *initial = orientation -> adj_list[src];
 	if (initial == NULL) {
 		/*printf("initial was null\n");*/
 		return false;
@@ -446,14 +446,14 @@ bool isReachableAux(struct Orientation *orientation, int src, int dest, bool *vi
 		/*printf("until here?\n");*/
 		if ((initial -> v == dest) && (initial -> orientation == 1))
 			return true;
-		if ((initial -> orientation == 1) && isReachableAux(orientation, initial -> v, dest, visited))
+		if ((initial -> orientation == 1) && is_reachable_aux(orientation, initial -> v, dest, visited))
 			result = true;
 		initial = initial -> next;
 	}
 	return result;
 }
 
-bool isReachable(struct Orientation *orientation, int src, int dest) {
+bool is_reachable(struct Orientation *orientation, int src, int dest) {
 	/* Returns true iff dest is reachable from src
 	 * in partial orientation.
 	 * Assumes that src is different from dest. */
@@ -462,56 +462,56 @@ bool isReachable(struct Orientation *orientation, int src, int dest) {
 	visited = (bool *) malloc(n * sizeof(bool));
 	for (int i = 0; i < n; i++)
 		visited[i] = false;
-	bool result = isReachableAux(orientation, src, dest, visited);
+	bool result = is_reachable_aux(orientation, src, dest, visited);
 	free(visited);
 	return result;
 }
 
-struct Orientation *createCompleteGraph (int n) {
+struct Orientation *create_complete_graph (int n) {
 	// Allocates memory and returns pointer to a complete
 	// undirected graph on n vertices.
-	struct Orientation *graph = createOrientation(n);
+	struct Orientation *graph = create_orientation(n);
 	for (int i = 0; i < n; i++)
 		for (int j = 0; j < n; j++)
 			if (i < j)
-				addEdge(graph, i, j);
+				add_edge(graph, i, j);
 	return graph;
 }
 
-struct Orientation *createCycle (int n) {
+struct Orientation *create_cycle (int n) {
 	// Allocates memory and returns pointer to a cycle
 	// undirected graph on n vertices.
-	struct Orientation *graph = createOrientation(n);
+	struct Orientation *graph = create_orientation(n);
 	for (int i = 0; i < n-1; i++)
-		addEdge(graph, i, i+1);
-	addEdge(graph, n-1, 0);
+		add_edge(graph, i, i+1);
+	add_edge(graph, n-1, 0);
 	return graph;
 }
 
-struct Orientation *createCompleteOrientation (int n) {
+struct Orientation *create_complete_orientation (int n) {
 	// Allocates memory and returns pointer to a completely
 	// oriented complete graph on n vertices.
-	struct Orientation *orientation = createCompleteGraph(n);
+	struct Orientation *orientation = create_complete_graph(n);
 	for (int i = 0; i < n; i++)
 		for(int j = 0; j < n; j++)
 			if (i < j) 
-				orientEdge(orientation, i, j);
+				orient_edge(orientation, i, j);
 	return orientation;
 
 }
 
-bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int* setOfVertices, int length) {
+bool are_reach_relations_equal (struct Orientation *orient1, struct Orientation *orient2, int* setOfVertices, int length) {
 	/* this function assume that the set of oriented edges are the same*/
 	/* (and thus that the elimination front is the same)*/
 	/* it checks if the reachability relation on the set of vertices given is the same*/
 	for(int i = 0; i < length; i++) {
-		assert(DAGet(i,orient1->EF) == DAGet(i, orient2->EF));
-		assert(DAIsSorted(orient1->reachFrom[i]));
-		assert(DAIsSorted(orient1->reachTo[i]));
-		if(!DAAreElementsEqualInOrderRestricted(orient1->reachFrom[i], orient2->reachFrom[i], orient1->EF)) {
+		assert(da_get(i,orient1->ef) == da_get(i, orient2->ef));
+		assert(da_is_sorted(orient1->reach_from[i]));
+		assert(da_is_sorted(orient1->reach_to[i]));
+		if(!da_are_elements_equal_in_order_restricted(orient1->reach_from[i], orient2->reach_from[i], orient1->ef)) {
 			return false;
 		}
-		if(!DAAreElementsEqualInOrderRestricted(orient1->reachTo[i], orient2->reachTo[i], orient1->EF)) {
+		if(!da_are_elements_equal_in_order_restricted(orient1->reach_to[i], orient2->reach_to[i], orient1->ef)) {
 			return false;
 		}
 	}
@@ -519,118 +519,118 @@ bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *or
 	return true;
 }
 
-bool isVertexInEF (struct Orientation *orient, int i) {
+bool is_vertex_in_ef (struct Orientation *orient, int i) {
 	/* i: vertex under cosideration */
-	bool isThereUnd = false, isThereDir = false;
-	struct Node *p = orient -> adjList[i];
+	bool is_there_und = false, is_there_dir = false;
+	struct Node *p = orient -> adj_list[i];
 	if (p == NULL) {
 		return false;
 	}
 	while (p != NULL) {
 		if((p -> orientation == 1) || (p -> orientation == -1)) {
-			isThereDir = true;
+			is_there_dir = true;
 		}
 		else {
-			isThereUnd = true;
+			is_there_und = true;
 		}
 		p = p -> next;	
 	}
-	return isThereUnd && isThereDir;
+	return is_there_und && is_there_dir;
 }
 
-int *computeEliminationFront(struct Orientation *orient, int *sizeEF) {
+int *compute_elimination_front(struct Orientation *orient, int *size_ef) {
 	int n = orient -> n;
-	int *retArray;
-	*sizeEF = 0;
+	int *ret_array;
+	*size_ef = 0;
 	int i;
 	for (i = 0; i < n; i++) {
-		if(isVertexInEF(orient, i)) {
-			(*sizeEF)++;
+		if(is_vertex_in_ef(orient, i)) {
+			(*size_ef)++;
 		}
 	}
 
-	if((*sizeEF) == 0) {
+	if((*size_ef) == 0) {
 		printf("the size of the elimination front is 0\n");
 		return NULL;
 	}
 
-	retArray = (int *) malloc(sizeof(int) * (*sizeEF));
+	ret_array = (int *) malloc(sizeof(int) * (*size_ef));
 
-	if(retArray == NULL) {
+	if(ret_array == NULL) {
 		printf("BAD\n");
 		return NULL;
 	}
 	
 	int j = 0;
 	for (i = 0; i < n; i++) {
-		if(isVertexInEF(orient, i)) {
-			retArray[j++] = i;
+		if(is_vertex_in_ef(orient, i)) {
+			ret_array[j++] = i;
 		}
 	}
 
-	return retArray;
+	return ret_array;
 }
 
-struct Node *copyNodeList(struct Node *original) {
-	struct Node *retVal = NULL; 
+struct Node *copy_node_list(struct Node *original) {
+	struct Node *ret_val = NULL; 
 	struct Node *trav = NULL;
 
 	if (original == NULL) {
 		return NULL;
 	}
 
-	retVal = createNode(original -> v);
-	retVal -> orientation = original -> orientation;
-	trav = retVal;
+	ret_val = create_node(original -> v);
+	ret_val -> orientation = original -> orientation;
+	trav = ret_val;
 
 	while ( original -> next != NULL ) {
 		original = original -> next;
-		trav -> next = createNode(original -> v);
+		trav -> next = create_node(original -> v);
 		trav = trav -> next;
 		trav -> orientation = original -> orientation;
 	}
 
-	return retVal;
+	return ret_val;
 }
 
-struct Orientation *copyOrientation (struct Orientation *original) {
+struct Orientation *copy_orientation (struct Orientation *original) {
 	int i;
-	struct Orientation *retVal = createOrientation(original -> n);
-	retVal -> m = original -> m;
+	struct Orientation *ret_val = create_orientation(original -> n);
+	ret_val -> m = original -> m;
 	for (i = 0; i < original -> n; i++) {
-		retVal -> adjList[i] = copyNodeList(original -> adjList[i]);
+		ret_val -> adj_list[i] = copy_node_list(original -> adj_list[i]);
 	}
 
-	// EF, reachFrom, reachTo
+	// ef, reach_from, reachTo
 	
-	retVal->sizeEF = original->sizeEF;
-	if(original->sizeEF < 0) {
-		retVal->EF = NULL;
-		retVal->reachFrom = NULL;
-		retVal->reachTo = NULL;
-		return retVal;
+	ret_val->size_ef = original->size_ef;
+	if(original->size_ef < 0) {
+		ret_val->ef = NULL;
+		ret_val->reach_from = NULL;
+		ret_val->reach_to = NULL;
+		return ret_val;
 	}
 
-	retVal->EF = DACopy(original->EF);
+	ret_val->ef = da_copy(original->ef);
 	
-	retVal->reachFrom = malloc(retVal->sizeEF * sizeof(struct DynamicArray*));
-	retVal->reachTo = malloc(retVal->sizeEF * sizeof(struct DynamicArray*));
-	for(int i = 0; i < retVal->sizeEF; i++) {
-		retVal->reachFrom[i] = DACopy(original->reachFrom[i]);;	
-		retVal->reachTo[i] = DACopy(original->reachTo[i]);;	
+	ret_val->reach_from = malloc(ret_val->size_ef * sizeof(struct DynamicArray*));
+	ret_val->reach_to = malloc(ret_val->size_ef * sizeof(struct DynamicArray*));
+	for(int i = 0; i < ret_val->size_ef; i++) {
+		ret_val->reach_from[i] = da_copy(original->reach_from[i]);;	
+		ret_val->reach_to[i] = da_copy(original->reach_to[i]);;	
 	}
 
-	return retVal;
+	return ret_val;
 }
 
 
-bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, bool *visited) {
+bool is_self_reachable_aux (struct Orientation *orient, int src, int dest, int i, bool *visited) {
 	if (visited[src] && src != i) {
 		/*printf("already visited\n"); */
 		return false;
 	}
 	visited[src] = true;
-	struct Node *initial = orient -> adjList[src];
+	struct Node *initial = orient -> adj_list[src];
 	if (initial == NULL) {
 		/*printf("initial was null\n");*/
 		return false;
@@ -640,14 +640,14 @@ bool isSelfReachableAux (struct Orientation *orient, int src, int dest, int i, b
 		/*printf("until here?\n");*/
 		if ((initial -> v == dest) && (initial -> orientation == 1))
 			return true;
-		if ((initial -> orientation == 1) && isSelfReachableAux(orient, initial -> v, dest, i, visited))
+		if ((initial -> orientation == 1) && is_self_reachable_aux(orient, initial -> v, dest, i, visited))
 			result = true;
 		initial = initial -> next;
 	}
 	return result;
 }
 
-bool isSelfReachable (struct Orientation *orient, int i) {
+bool is_self_reachable (struct Orientation *orient, int i) {
 	// Assumes that orient is a digraph.
 	// Returns true if and only if vertex i can reach itself.
 	int n = orient -> n;
@@ -655,17 +655,17 @@ bool isSelfReachable (struct Orientation *orient, int i) {
 	visited = (bool *) malloc(n * sizeof(bool));
 	for (int i = 0; i < n; i++)
 		visited[i] = false;
-	bool result = isSelfReachableAux(orient, i, i, i, visited);
+	bool result = is_self_reachable_aux(orient, i, i, i, visited);
 	free(visited);
 	return result;
 }
 
-void computeLexOrder (int *u, int *v, struct Orientation *undir) {
+void compute_lex_order (int *u, int *v, struct Orientation *undir) {
 	// This function receives an undirected (connected) graph, and
 	// returns the lexicographical order of the edges in the form
 	// of two int arrays u and v (i.e. #i-th edge = (u[i],v[i])).
 	// It assumes memory has already been allocated to u and v.
-	struct Orientation *o = copyOrientation(undir);
+	struct Orientation *o = copy_orientation(undir);
 	int n = o -> n;
 	int counter = 0;
 	int next = -1;
@@ -673,67 +673,67 @@ void computeLexOrder (int *u, int *v, struct Orientation *undir) {
 	struct Node *p;
 	for(int i = 0; i < n; i++) {
 		isFirst = true;
-		if(o ->adjList[i] == NULL) {
+		if(o ->adj_list[i] == NULL) {
 			printf("Error! Graph is not connected!");
 			return;
 		}
-		p = o -> adjList[i];
+		p = o -> adj_list[i];
 		while(p != NULL) {
 			if(isFirst && p->orientation == 0) {
 				isFirst = false;
 				next = p->v;
 			}
 			if(p->orientation==0) {
-				//printOrientation(o);
-				orientEdge(o, i, p->v);
+				//print_orientation(o);
+				orient_edge(o, i, p->v);
 				u[counter] = i;
 				v[counter++] = p->v;
 			}
 			p = p -> next;
 		}
 	}
-	deleteOrientation(o);
+	delete_orientation(o);
 }
 
-bool isCyclic(struct Orientation *o, int v) {
+bool is_cyclic(struct Orientation *o, int v) {
 	// This function is given a partial orientation o,
 	// a vertex adjacent to the edge that has just been
 	// oriented, and returns whether there is a cycle
 	// containing v (i.e. whether the orientation is cyclic
 	// if we use it throughout the whole BDD construction
 	// process).
-	if(o->adjList[v] == NULL)
+	if(o->adj_list[v] == NULL)
 		return false;
-	return isSelfReachable(o, v);	
+	return is_self_reachable(o, v);	
 }
 
-struct Orientation *createErdosRenyi (int n, double p) {
+struct Orientation *create_erdos_renyi (int n, double p) {
 	struct Orientation *orientation = malloc(sizeof(struct Orientation));
 	float r;
 
 	orientation -> n = n;
-	orientation -> adjList = malloc(n * sizeof(struct Node *));
+	orientation -> adj_list = malloc(n * sizeof(struct Node *));
 	for (int i = 0; i < n; i++) {
-		orientation -> adjList[i] = NULL;
+		orientation -> adj_list[i] = NULL;
 	}
 	
 	for (int i = 0; i < n; i++) {
 		for (int j = i+1; j < n; j++) {
 			r = (rand()/(double)RAND_MAX);
 			if( r < p ) {
-				addEdge(orientation, i, j);
+				add_edge(orientation, i, j);
 			}
 		}
 	}
 	return orientation;
 }
 
-void testEdgeOrder() {
-	struct Orientation *o = createCompleteGraph(6);
+void test_edge_order() {
+	struct Orientation *o = create_complete_graph(6);
 	int m = o->m;
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
-	computeLexOrder(u, v, o);
+	compute_lex_order(u, v, o);
 	for(int i = 0; i < m; i++) {
 		printf("(u[%d],v[%d]) = (%d, %d)\n", i, i, u[i], v[i]);
 	}
@@ -742,97 +742,97 @@ void testEdgeOrder() {
 	free(v);
 }
 
-void testCopy() {
+void test_copy() {
 	struct Orientation *orient = NULL;
-	struct Orientation *orientCopy = NULL;
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 3, 4);
-	orientCopy = copyOrientation(orient);
-	printOrientation(orient);
-	printOrientation(orientCopy);
+	struct Orientation *orient_copy = NULL;
+	orient = create_cycle(5);
+	orient_edge(orient, 2, 1);
+	orient_edge(orient, 3, 2);
+	orient_edge(orient, 3, 4);
+	orient_copy = copy_orientation(orient);
+	print_orientation(orient);
+	print_orientation(orient_copy);
 }
 
-void testReachability() {
+void test_reachability() {
 
 	/* simple test 1*/
-	struct Orientation *orient1 = createCompleteGraph(4);
-	struct Orientation *orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
+	struct Orientation *orient1 = create_complete_graph(4);
+	struct Orientation *orient2 = create_complete_graph(4);
+	delete_edge(orient1, 0, 3);
+	delete_edge(orient1, 1, 2);
+	delete_edge(orient2, 0, 3);
+	delete_edge(orient2, 1, 2);
 
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 0, 2);
-	orientEdge(orient2, 1, 0);
-	orientEdge(orient2, 2, 0);
+	orient_edge(orient1, 0, 1);
+	orient_edge(orient1, 0, 2);
+	orient_edge(orient2, 1, 0);
+	orient_edge(orient2, 2, 0);
 
-	int sizeEF;
-	int *eliminationFront = computeEliminationFront(orient1, &sizeEF);
+	int size_ef;
+	int *eliminationFront = compute_elimination_front(orient1, &size_ef);
 
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+	if(are_reach_relations_equal(orient1, orient2, eliminationFront, size_ef)){
 		printf("seems alrighty\n");
 	}
 	else 
 		printf("bad\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
+	delete_orientation(orient1);
+	delete_orientation(orient2);
 	free(eliminationFront);
 
 	/* simple test2*/
-	orient1 = createCompleteGraph(4);
-	orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
+	orient1 = create_complete_graph(4);
+	orient2 = create_complete_graph(4);
+	delete_edge(orient1, 0, 3);
+	delete_edge(orient1, 1, 2);
+	delete_edge(orient2, 0, 3);
+	delete_edge(orient2, 1, 2);
 
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 2, 0);
-	orientEdge(orient1, 3, 1);
-	orientEdge(orient2, 0, 2);
-	orientEdge(orient2, 1, 0);
-	orientEdge(orient2, 1, 3);
+	orient_edge(orient1, 0, 1);
+	orient_edge(orient1, 2, 0);
+	orient_edge(orient1, 3, 1);
+	orient_edge(orient2, 0, 2);
+	orient_edge(orient2, 1, 0);
+	orient_edge(orient2, 1, 3);
 
-	eliminationFront = computeEliminationFront(orient1, &sizeEF);
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+	eliminationFront = compute_elimination_front(orient1, &size_ef);
+	if(are_reach_relations_equal(orient1, orient2, eliminationFront, size_ef)){
 		printf("seems alrighty\n");
 	}
 	else 
 		printf("bad\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
+	delete_orientation(orient1);
+	delete_orientation(orient2);
 	free(eliminationFront);
 	
 	/* simple test3: this time the ReachRelations are different*/
-	orient1 = createCompleteGraph(4);
-	orient2 = createCompleteGraph(4);
-	deleteEdge(orient1, 0, 3);
-	deleteEdge(orient1, 1, 2);
-	deleteEdge(orient2, 0, 3);
-	deleteEdge(orient2, 1, 2);
+	orient1 = create_complete_graph(4);
+	orient2 = create_complete_graph(4);
+	delete_edge(orient1, 0, 3);
+	delete_edge(orient1, 1, 2);
+	delete_edge(orient2, 0, 3);
+	delete_edge(orient2, 1, 2);
 
-	orientEdge(orient1, 0, 1);
-	orientEdge(orient1, 2, 0);
-	orientEdge(orient1, 3, 1);
+	orient_edge(orient1, 0, 1);
+	orient_edge(orient1, 2, 0);
+	orient_edge(orient1, 3, 1);
 
-	orientEdge(orient2, 2, 0);
-	orientEdge(orient2, 0, 1);
-	orientEdge(orient2, 1, 3);
-	eliminationFront = computeEliminationFront(orient1, &sizeEF);
-	if(areReachRelationsEqual(orient1, orient2, eliminationFront, sizeEF)){
+	orient_edge(orient2, 2, 0);
+	orient_edge(orient2, 0, 1);
+	orient_edge(orient2, 1, 3);
+	eliminationFront = compute_elimination_front(orient1, &size_ef);
+	if(are_reach_relations_equal(orient1, orient2, eliminationFront, size_ef)){
 		printf("bad\n");
 	}
 	else 
 		printf("seems alrighty\n");
-	deleteOrientation(orient1);
-	deleteOrientation(orient2);
+	delete_orientation(orient1);
+	delete_orientation(orient2);
 	free(eliminationFront);
 }
 
-struct Orientation *importFromFile (char *fileName) {
+struct Orientation *import_from_file (char *fileName) {
 	FILE *p;
 	char line[256];
 	int n = -1; // number of vertices
@@ -853,25 +853,25 @@ struct Orientation *importFromFile (char *fileName) {
 		}
 	}
 	rewind(p);
-	struct Orientation *retVal = createOrientation(n);
+	struct Orientation *ret_val = create_orientation(n);
 	// Second traversal, add edges.
 	while (fgets(line, sizeof(line), p)) {
 		sscanf(line, "%d %d {}", &i, &j);
-		addEdge(retVal, i, j);
+		add_edge(ret_val, i, j);
 	}
 	fclose(p);
-	return retVal;
+	return ret_val;
 }
 
-void deleteOrientedEdges (struct Orientation *orientation, int v) {
+void delete_oriented_edges (struct Orientation *orientation, int v) {
 	/* returns false iff list is empty */
-	struct Node *p = orientation -> adjList[v]; //pointer
+	struct Node *p = orientation -> adj_list[v]; //pointer
 	struct Node *d = p; // to be deleted
 	if (p == NULL) {
 		return;
 	}
 	if(p -> next == NULL) {
-		orientation -> adjList[v] = p -> next;
+		orientation -> adj_list[v] = p -> next;
 		free(p);
 		return;
 	}
@@ -879,7 +879,7 @@ void deleteOrientedEdges (struct Orientation *orientation, int v) {
 	// Initial nodes.
 	while(p -> orientation == -1 || p->orientation == 1) {
 		d = p;
-		orientation -> adjList[v] = p -> next;
+		orientation -> adj_list[v] = p -> next;
 		p = p -> next;
 		free(d);
 		if(p == NULL) {
@@ -901,45 +901,65 @@ void deleteOrientedEdges (struct Orientation *orientation, int v) {
 	
 }
 
-struct Orientation *getReachabilityOrientation (struct Orientation *original, int* EF, int sizeEF) {
+struct Orientation *get_reachability_orientation (struct Orientation *original, int* ef, int size_ef) {
 	// Returns orientation where oriented edges have been substituted
 	// for one oriented edge representing each related pair of vertices
 	// in the elimination front
 	int i, j;
-	struct Orientation *retVal = copyOrientation(original);
-	//return retVal;
-	//printf("before (size EF) = %d\n", sizeEF);
-	//printOrientation(retVal);
+	struct Orientation *ret_val = copy_orientation(original);
+	//return ret_val;
+	//printf("before (size ef) = %d\n", size_ef);
+	//print_orientation(ret_val);
 	for (i = 0; i < original -> n; i++) {
-		deleteOrientedEdges(retVal, i);
+		delete_oriented_edges(ret_val, i);
 	}
 
-	for (i = 0; i < sizeEF; i++) {
-		for(j = 0; j < sizeEF; j++) {
+	for (i = 0; i < size_ef; i++) {
+		for(j = 0; j < size_ef; j++) {
 			if(i == j) {
-				if(isSelfReachable(original, EF[i])) {
+				if(is_self_reachable(original, ef[i])) {
 					printf("hey hey\n\n");
-					addEdge(retVal, EF[i], EF[i]);
-					orientEdge(retVal, EF[i], EF[i]);
+					add_edge(ret_val, ef[i], ef[i]);
+					orient_edge(ret_val, ef[i], ef[i]);
 				}
 				continue;
 			}
-			if(isReachable(original, EF[i], EF[j])) {
-				addEdge(retVal, EF[i], EF[j]);
-				orientEdge(retVal, EF[i], EF[j]);
+			if(is_reachable(original, ef[i], ef[j])) {
+				add_edge(ret_val, ef[i], ef[j]);
+				orient_edge(ret_val, ef[i], ef[j]);
 			}
 
 		}
 	}
 	//printf("after\n");
-	//printOrientation(retVal);
+	//print_orientation(ret_val);
 	
-	if(!areReachRelationsEqual(original, retVal, EF, sizeEF)) {
+	if(!are_reach_relations_equal(original, ret_val, ef, size_ef)) {
 		printf("Not equal!\n");
-		printOrientation(original);
-		printOrientation(retVal);
+		print_orientation(original);
+		print_orientation(ret_val);
 	}
 	
 
-	return retVal;
+	return ret_val;
+}
+
+bool is_source_or_sink (struct Orientation *orient, int v) {
+	// This returns true if a v *is non-adjacent to unoriented edges*
+	// and is a sink or a source
+	struct Node* p = orient->adj_list[v];
+	if (p == NULL) return false;
+	bool isSource = true;
+	bool isSink = true;
+	while (p != NULL) {
+		if(p->orientation == 0) return false;
+		if(p->orientation == -1) {
+			isSource = false;
+		}
+		if(p->orientation == +1) {
+			isSink = false;
+		}
+		p = p->next;
+	}
+	return isSource || isSink;
 }

@@ -11,76 +11,77 @@ struct Node {
 struct Orientation {
 	int n;				/* number of vertices */
 	int m;				/* number of edges */	
-	struct Node **adjList;		/* list of vertices */
-	int sizeEF;			/* Size of the elimination front. */
-	struct DynamicArray *EF;	// Elimination front. OBS: We will _always_ 
-					// force the EF to be sorted in increasing
+	struct Node **adj_list;		/* list of vertices */
+	int size_ef;			/* Size of the elimination front. */
+	struct DynamicArray *ef;	// Elimination front. OBS: We will _always_ 
+					// force the ef to be sorted in increasing
 					// order.
 
 	struct DynamicArray
-		**reachFrom;		/* For each element of the EF, from which
+		**reach_from;		/* For each element of the ef, from which
 					   other elements is it reachable? */
 	struct DynamicArray
-		**reachTo;		/* For each element of the EF, elements
+		**reach_to;		/* For each element of the ef, elements
 				   	to which it is reachable. */
 
-	// reachFrom[i] and reachTo[i] all have size "sizeEF",
-	// and reachFrom[i][j] = -1 iff j is not an element of reachFrom[i].
+	// reach_from[i] and reach_to[i] all have size "size_ef",
+	// and reach_from[i][j] = -1 iff j is not an element of reach_from[i].
 };
 
-struct Node *createNode(int v);
+struct Node *create_node(int v);
 
-struct Orientation *createOrientation (int noV);
+struct Orientation *create_orientation (int no_v);
 
-void appendNode (struct Node **list, struct Node *node, int v);
+void append_node (struct Node **list, struct Node *node, int v);
 
-void addEdge (struct Orientation *orientation, int src, int dest);
+void add_edge (struct Orientation *orientation, int src, int dest);
 
-void printOrientation (struct Orientation *orientation);
+void print_orientation (struct Orientation *orientation);
 
-void deleteEdge (struct Orientation *orientation, int src, int dest);
+void delete_edge (struct Orientation *orientation, int src, int dest);
 
-void orientEdge (struct Orientation *orientation, int src, int dest);
+void orient_edge (struct Orientation *orientation, int src, int dest);
 
-bool deleteInitialNode (struct Orientation *orientation, int v);
+bool delete_initial_node (struct Orientation *orientation, int v);
 
-void deleteList (struct Orientation *orientation, int v);
+void delete_list (struct Orientation *orientation, int v);
 
-void deleteOrientation(struct Orientation *orientation);
+void delete_orientation(struct Orientation *orientation);
 
-bool isReachable(struct Orientation *orientation, int src, int dest);
+bool is_reachable(struct Orientation *orientation, int src, int dest);
 
-struct Orientation *createCompleteGraph (int n);
+struct Orientation *create_complete_graph (int n);
 
-struct Orientation *createCycle (int n);
+struct Orientation *create_cycle (int n);
 
-struct Orientation *createCompleteOrientation (int n);
+struct Orientation *create_complete_orientation (int n);
 
-struct Orientation *importFromFile (char *fileName);
+struct Orientation *import_from_file (char *fileName);
 
-bool areReachRelationsEqual (struct Orientation *orient1, struct Orientation *orient2, int *setOfVertices, int length);
+bool are_reach_relations_equal (struct Orientation *orient1, struct Orientation *orient2, int *set_of_vertices, int length);
 
-int *computeEliminationFront(struct Orientation *orient, int *sizeEF);
+int *compute_elimination_front(struct Orientation *orient, int *size_ef);
 
-struct Orientation *copyOrientation (struct Orientation *original);
+struct Orientation *copy_orientation (struct Orientation *original);
 
-bool isStronglyConnected(struct Orientation *orient);
+bool is_strongly_connected(struct Orientation *orient);
 
-bool isSelfReachable (struct Orientation *orient, int i);
+bool is_self_reachable (struct Orientation *orient, int i);
 
-void computeLexOrder (int *u, int *v, struct Orientation *undir);
+void compute_lex_order (int *u, int *v, struct Orientation *undir);
 
-void testEdgeOrder();
+void test_edge_order();
 
-void testCopy();
+void test_copy();
 
-void testReachability();
+void test_reachability();
 
-bool isCyclic(struct Orientation *o, int v);
+bool is_cyclic(struct Orientation *o, int v);
 
-struct Orientation *createErdosRenyi (int n, double p);
+struct Orientation *create_erdos_renyi (int n, double p);
 
-struct Orientation *getReachabilityOrientation (struct Orientation *original, int* EF, int sizeEF);
+struct Orientation *get_reachability_orientation (struct Orientation *original, int* ef, int size_ef);
 
+bool is_source_or_sink (struct Orientation *orient, int v);
 
 #endif

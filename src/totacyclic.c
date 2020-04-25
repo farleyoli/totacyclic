@@ -15,50 +15,50 @@ struct OrientBuffer {
 	struct BDDNode *node;		/* BDD Node to which current orientation corresponds*/
 };
 
-struct OrientBuffer *createEmptyBufferNode() {
-	struct OrientBuffer *retVal = malloc(sizeof(struct OrientBuffer));
+struct OrientBuffer *create_empty_buffer_node() {
+	struct OrientBuffer *ret_val = malloc(sizeof(struct OrientBuffer));
 
-	retVal -> orient = NULL;
-	retVal -> next = NULL;
-	retVal -> node = NULL;
-	return retVal;
+	ret_val -> orient = NULL;
+	ret_val -> next = NULL;
+	ret_val -> node = NULL;
+	return ret_val;
 }
 
-struct OrientBuffer *createBufferNode(struct Orientation *orient) {
-	struct OrientBuffer *retVal = malloc(sizeof(struct OrientBuffer));
+struct OrientBuffer *create_buffer_node(struct Orientation *orient) {
+	struct OrientBuffer *ret_val = malloc(sizeof(struct OrientBuffer));
 
-	retVal -> orient = orient;
-	retVal -> next = NULL;
-	retVal -> node = NULL;
-	return retVal;
+	ret_val -> orient = orient;
+	ret_val -> next = NULL;
+	ret_val -> node = NULL;
+	return ret_val;
 }
 
-struct OrientBuffer *deleteInitialBufferNode (struct OrientBuffer *buf) {
+struct OrientBuffer *delete_initial_buffer_node (struct OrientBuffer *buf) {
 	if (buf == NULL)
 		return NULL;
 	struct OrientBuffer *next = buf -> next;
-	deleteOrientation(buf -> orient);
+	delete_orientation(buf -> orient);
 	free(buf);
 	return next;
 }
 
-void deleteBufferList (struct OrientBuffer *initial) {
+void delete_buffer_list (struct OrientBuffer *initial) {
 	while(initial != NULL)
-		initial = deleteInitialBufferNode(initial);
+		initial = delete_initial_buffer_node(initial);
 }
 
-struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientation *orient, int *EF, int sizeEF, struct BDDNode *bddNode, bool isLo, int V) {
-	/*this function assumes that all elements have the same EF! */
+struct BDDNode *add_to_buffer_list (struct OrientBuffer **buffer, struct Orientation *orient, int *ef, int sizeEF, struct BDDNode *bddNode, bool isLo, int V) {
+	/*this function assumes that all elements have the same ef! */
 	/* add orientation to the buffer list, as long as the orientation is not already present*/
 	/* returns pointer to BDD node to which "node" should point in case it is already present and NULL otherwise*/
 	if((*buffer) == NULL) {
 		//printf("1\n");
-		*buffer = createBufferNode(orient);
+		*buffer = create_buffer_node(orient);
 		if (isLo) {
-			bddNode -> lo = newNullBDDNode(V);
+			bddNode -> lo = new_null_bdd_node(V);
 			(*buffer) -> node = bddNode -> lo;
 		} else {
-			bddNode -> hi = newNullBDDNode(V);
+			bddNode -> hi = new_null_bdd_node(V);
 			(*buffer) -> node = bddNode -> hi;
 		}
 		return NULL;
@@ -68,7 +68,7 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 
 	do {
 		//printf("2\n");
-		if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
+		if(are_reach_relations_equal(temp -> orient, orient, ef, sizeEF)) {
 			/* no need to add, do some magic and return */
 			return temp->node;
 		}
@@ -76,25 +76,25 @@ struct BDDNode *addToBufferList (struct OrientBuffer **buffer, struct Orientatio
 			temp = temp -> next; 
 		}
 	} while (temp -> next != NULL);
-	if(areReachRelationsEqual(temp -> orient, orient, EF, sizeEF)) {
+	if(are_reach_relations_equal(temp -> orient, orient, ef, sizeEF)) {
 		return temp->node;
 	}
 
 	/* we add orientation to the BufferList */
 	//printf("3\n");
-	struct OrientBuffer *new = createBufferNode(orient);
+	struct OrientBuffer *new = create_buffer_node(orient);
 	temp -> next = new;
 	if(isLo) {
-		bddNode -> lo = newNullBDDNode(V);
+		bddNode -> lo = new_null_bdd_node(V);
 		(temp -> next) -> node = bddNode -> lo;
 	} else {
-		bddNode -> hi = newNullBDDNode(V);
+		bddNode -> hi = new_null_bdd_node(V);
 		(temp -> next) -> node = bddNode -> hi;
 	}
 	return NULL;
 }
 
-int sizeBuffer(struct OrientBuffer *b) {
+int size_buffer(struct OrientBuffer *b) {
 	int i = 0;
 	if(b == NULL) {
 		return i;
@@ -108,244 +108,274 @@ int sizeBuffer(struct OrientBuffer *b) {
 	return i;
 }
 
-void printBuffer(struct OrientBuffer *b) {
+void print_buffer(struct OrientBuffer *b) {
 	if(b == NULL) {
 		return;
 	}
 
 	while (b != NULL) {
-		printOrientation(b -> orient);
+		print_orientation(b -> orient);
 		b = b -> next;
 	}
 }
 
 
-struct BDDNode *createBDD(struct Orientation *undir) {
+struct BDDNode *create_bdd(struct Orientation *undir, bool is_acyclic) {
 	/* the order of the vertices is the natural one */
-	int i, j, m, sizeBuf;
-	struct Orientation *tempOr1 = NULL;
-	struct Orientation *tempOr2 = NULL;
+	int i, j, m, size_buf;
+	struct Orientation *temp_or_1 = NULL;
+	struct Orientation *temp_or_2 = NULL;
 	struct Orientation *temp = NULL;
-	struct OrientBuffer *nextBuffer = createBufferNode(undir);
-	struct OrientBuffer *prevBuffer = nextBuffer;
-	struct OrientBuffer *InitPrevBuffer = NULL;
+	struct OrientBuffer *next_buffer = create_buffer_node(undir);
+	struct OrientBuffer *prev_buffer = next_buffer;
+	struct OrientBuffer *init_prev_buffer = NULL;
 	m = undir -> m;
 	//printf("m = %d\n", m);
 
 	int *u = malloc(m * sizeof(int));
 	int *v = malloc(m * sizeof(int));
-	computeLexOrder(u, v, undir);
+	compute_lex_order(u, v, undir);
 
-	int *EF = NULL;
+	int *ef = NULL;
 	int sizeEF = 0;
-	struct BDDNode *retVal = newNullBDDNode(1);
-	struct BDDNode *trav = retVal;
-	struct BDDNode *tempBDDNode = NULL;
-	prevBuffer -> node = trav; 
-	struct BDDNode *T = newNullBDDNode(-1);
-	struct BDDNode *F = newNullBDDNode(-1);
+	struct BDDNode *ret_val = new_null_bdd_node(1);
+	struct BDDNode *trav = ret_val;
+	struct BDDNode *temp_bdd_node = NULL;
+	prev_buffer -> node = trav; 
+	struct BDDNode *T = new_null_bdd_node(-1);
+	struct BDDNode *F = new_null_bdd_node(-1);
 
 	for (i = 0; i < m; i++) { 
 		/* construct (i+1)-th level from i-th level */
 		//printf("%d/%d\n", i, m);
 
-		nextBuffer = NULL;	/* buffer for (i+1)-th level */
-		sizeBuf = sizeBuffer(prevBuffer);
+		next_buffer = NULL;	/* buffer for (i+1)-th level */
+		size_buf = size_buffer(prev_buffer);
 		//printf("i------------------------------\n");
-		//printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
-		//printBuffer(prevBuffer);
+		//printf("Buffer (size = %d, i = %d):\n", size_buf, i);
+		//print_buffer(prev_buffer);
 		//printf("f------------------------------\n");
 
-		InitPrevBuffer = prevBuffer;
+		init_prev_buffer = prev_buffer;
 
 		if (i == m-1) {
 			// The processing is different for the last
 			// ((m-1)-th to m-th) level.
-			for(j = 0; j < sizeBuf; j++) {
-				tempOr1 = copyOrientation(prevBuffer -> orient);
-				trav = prevBuffer -> node;
-				tempOr2 = copyOrientation(tempOr1);
-				orientEdge(tempOr1, u[i], v[i]);
-				orientEdge(tempOr2, v[i], u[i]);
-				if (isSelfReachable(tempOr1, 0)) {
-					//printf("hue1\n");
-					prevBuffer -> node -> lo = F;
-				} else {
-					//printf("hue2\n");
-					prevBuffer -> node -> lo = T;
+			if (is_acyclic) {
+				for(j = 0; j < size_buf; j++) {
+					temp_or_1 = copy_orientation(prev_buffer -> orient);
+					trav = prev_buffer -> node;
+					temp_or_2 = copy_orientation(temp_or_1);
+					orient_edge(temp_or_1, u[i], v[i]);
+					orient_edge(temp_or_2, v[i], u[i]);
+					if (is_self_reachable(temp_or_1, 0)) {
+						//printf("hue1\n");
+						prev_buffer -> node -> lo = F;
+					} else {
+						//printf("hue2\n");
+						prev_buffer -> node -> lo = T;
+					}
+					if (is_self_reachable(temp_or_2, 0)) {
+						//printf("hue3\n");
+						prev_buffer -> node -> hi = F;
+					} else {
+						//printf("hue4\n");
+						prev_buffer -> node -> hi = T;
+					}
+					prev_buffer = prev_buffer -> next;
 				}
-				if (isSelfReachable(tempOr2, 0)) {
-					//printf("hue3\n");
-					prevBuffer -> node -> hi = F;
-				} else {
-					//printf("hue4\n");
-					prevBuffer -> node -> hi = T;
-				}
-				prevBuffer = prevBuffer -> next;
+			} else {
+					temp_or_1 = copy_orientation(prev_buffer -> orient);
+					trav = prev_buffer -> node;
+					temp_or_2 = copy_orientation(temp_or_1);
+					orient_edge(temp_or_1, u[i], v[i]);
+					orient_edge(temp_or_2, v[i], u[i]);
+					if (!is_self_reachable(temp_or_1, 0)) {
+						//printf("hue1\n");
+						prev_buffer -> node -> lo = F;
+					} else {
+						//printf("hue2\n");
+						prev_buffer -> node -> lo = T;
+					}
+					if (!is_self_reachable(temp_or_2, 0)) {
+						//printf("hue3\n");
+						prev_buffer -> node -> hi = F;
+					} else {
+						//printf("hue4\n");
+						prev_buffer -> node -> hi = T;
+					}
+					prev_buffer = prev_buffer -> next;
 			}
-			//sizeBuf = sizeBuffer(nextBuffer);
-			prevBuffer = nextBuffer;
-			deleteBufferList(InitPrevBuffer);
+			//size_buf = size_buffer(next_buffer);
+			prev_buffer = next_buffer;
+			delete_buffer_list(init_prev_buffer);
 			break;
 		}
 
 
-		for(j = 0; j < sizeBuf; j++) {
-			tempOr1 = copyOrientation(prevBuffer -> orient);
-			trav = prevBuffer -> node;
-			tempOr2 = copyOrientation(tempOr1);
+		for(j = 0; j < size_buf; j++) {
+			temp_or_1 = copy_orientation(prev_buffer -> orient);
+			trav = prev_buffer -> node;
+			temp_or_2 = copy_orientation(temp_or_1);
 
 
 			/* lo */
-			orientEdge(tempOr1, u[i], v[i]);
-			if (i > 1 && isCyclic(tempOr1, u[i])) {
+			orient_edge(temp_or_1, u[i], v[i]);
+			if (i > 1 && 
+			((is_acyclic && is_cyclic(temp_or_1, u[i])) ||
+			 (!is_acyclic && 
+			  (is_source_or_sink(temp_or_1, u[i]) 
+			   || is_source_or_sink(temp_or_1, v[i]))))) {
 				trav->lo = F;	
-				free(tempOr1);
+				free(temp_or_1);
 				goto label_hi;
 			}
 
 			if(j == 0) {
-				EF = computeEliminationFront(tempOr1, &sizeEF);	
+				ef = compute_elimination_front(temp_or_1, &sizeEF);	
 			}
 
-			tempBDDNode = addToBufferList(&nextBuffer, tempOr1, EF, sizeEF, trav, true, i+2);
+			temp_bdd_node = add_to_buffer_list(&next_buffer, temp_or_1, ef, sizeEF, trav, true, i+2);
 
 
-			if (tempBDDNode != NULL) {
-				trav -> lo = tempBDDNode; 
-				free(tempOr1);
+			if (temp_bdd_node != NULL) {
+				trav -> lo = temp_bdd_node; 
+				free(temp_or_1);
 			}
 			
 			label_hi:
 			/* hi */
-			orientEdge(tempOr2, v[i], u[i]);
-
-			if ( i > 1 && isCyclic(tempOr2, u[i])) {
+			orient_edge(temp_or_2, v[i], u[i]);
+			if (i > 1 && 
+			((is_acyclic && is_cyclic(temp_or_2, u[i])) ||
+			 (!is_acyclic && 
+			  (is_source_or_sink(temp_or_2, u[i]) 
+			   || is_source_or_sink(temp_or_2, v[i]))))) {
 				trav->hi = F;
-				free(tempOr2);
-				prevBuffer = prevBuffer -> next;
+				free(temp_or_2);
+				prev_buffer = prev_buffer -> next;
 				continue;
 			}
 
 
-			tempBDDNode = addToBufferList(&nextBuffer, tempOr2, EF, sizeEF, trav, false, i+2);
+			temp_bdd_node = add_to_buffer_list(&next_buffer, temp_or_2, ef, sizeEF, trav, false, i+2);
 
-			if(tempBDDNode != NULL) {
-				trav -> hi = tempBDDNode; 
-				free(tempOr2);
+			if(temp_bdd_node != NULL) {
+				trav -> hi = temp_bdd_node; 
+				free(temp_or_2);
 			}
 
-			prevBuffer = prevBuffer -> next;
+			prev_buffer = prev_buffer -> next;
 		}
-		sizeBuf = sizeBuffer(nextBuffer);
+		size_buf = size_buffer(next_buffer);
 		/*
-		if (sizeBuf == 1) {
+		if (size_buf == 1) {
 			printf("Buffer for i = %d\n\n", i);
-			printBuffer(nextBuffer);
+			print_buffer(next_buffer);
 		}
 		*/
-		prevBuffer = nextBuffer;
-		free(EF);
-		deleteBufferList(InitPrevBuffer);
+		prev_buffer = next_buffer;
+		free(ef);
+		delete_buffer_list(init_prev_buffer);
 	}
-	//sizeBuf = sizeBuffer(prevBuffer);
+	//size_buf = size_buffer(prev_buffer);
 	//printf("final------------------------------\n");
-	//printf("Buffer (size = %d, i = %d):\n", sizeBuf, i);
-	//printBuffer(prevBuffer);
+	//printf("Buffer (size = %d, i = %d):\n", size_buf, i);
+	//print_buffer(prev_buffer);
 	//printf("final------------------------------\n");
 	free(u);
 	free(v);
-	return retVal;
+	return ret_val;
 }
 
-struct BDDNode *createCycleBDD(int n) {
-	struct Orientation *undir = createCycle(n);
-	struct BDDNode *retVal = createBDD(undir);
-	return retVal;
+struct BDDNode *create_cycle_bdd(int n) {
+	struct Orientation *undir = create_cycle(n);
+	struct BDDNode *ret_val = create_bdd(undir, true);
+	return ret_val;
 }
 
-struct BDDNode *createCompleteBDD(int n) {
-	struct Orientation *undir = createCompleteGraph(n);
-	struct BDDNode *retVal = createBDD(undir);
-	return retVal;
-}
-
-
-struct BDDNode *createERBDD(int n, double p) {
-	struct Orientation *undir = createErdosRenyi(n, p) ;
-	struct BDDNode *retVal = createBDD(undir);
-	return retVal;
+struct BDDNode *create_complete_bdd(int n, bool is_acyclic) {
+	struct Orientation *undir = create_complete_graph(n);
+	struct BDDNode *ret_val = create_bdd(undir, is_acyclic);
+	return ret_val;
 }
 
 
-void testBufferList() {
+struct BDDNode *create_erbdd(int n, double p) {
+	struct Orientation *undir = create_erdos_renyi(n, p) ;
+	struct BDDNode *ret_val = create_bdd(undir, true);
+	return ret_val;
+}
+
+
+void test_buffer_list() {
 	/* say test all the permutations of (1,2), (2,3) and (3,4) */
 	/* there should be three elements, because there are only 2 elements in the elimination front */
 	struct Orientation *orient = NULL;
 	struct OrientBuffer *buffer = NULL;
-	int *EF = NULL;
+	int *ef = NULL;
 	int sizeEF = 0;
 
 
-	orient = createCycle(5);
-	orientEdge(orient, 1, 2);
-	orientEdge(orient, 2, 3);
-	orientEdge(orient, 3, 4);
-	buffer = createBufferNode(orient);
+	orient = create_cycle(5);
+	orient_edge(orient, 1, 2);
+	orient_edge(orient, 2, 3);
+	orient_edge(orient, 3, 4);
+	buffer = create_buffer_node(orient);
 	/* initialization */
-	EF = computeEliminationFront(orient, &sizeEF);
+	ef = compute_elimination_front(orient, &sizeEF);
 
 	/*
 
-	orient = createCycle(5);
-	orientEdge(orient, 1, 2);
-	orientEdge(orient, 2, 3);
-	orientEdge(orient, 4, 3);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 1, 2);
+	orient_edge(orient, 2, 3);
+	orient_edge(orient, 4, 3);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 1, 2);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 3, 4);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 1, 2);
+	orient_edge(orient, 3, 2);
+	orient_edge(orient, 3, 4);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 1, 2);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 4, 3);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 1, 2);
+	orient_edge(orient, 3, 2);
+	orient_edge(orient, 4, 3);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 2, 3);
-	orientEdge(orient, 3, 4);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 2, 1);
+	orient_edge(orient, 2, 3);
+	orient_edge(orient, 3, 4);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 2, 3);
-	orientEdge(orient, 4, 3);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 2, 1);
+	orient_edge(orient, 2, 3);
+	orient_edge(orient, 4, 3);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 3, 4);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 2, 1);
+	orient_edge(orient, 3, 2);
+	orient_edge(orient, 3, 4);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
-	orient = createCycle(5);
-	orientEdge(orient, 2, 1);
-	orientEdge(orient, 3, 2);
-	orientEdge(orient, 4, 3);
-	addToBufferList(&buffer, orient, NULL, EF, sizeEF);
+	orient = create_cycle(5);
+	orient_edge(orient, 2, 1);
+	orient_edge(orient, 3, 2);
+	orient_edge(orient, 4, 3);
+	add_to_buffer_list(&buffer, orient, NULL, ef, sizeEF);
 
 	*/
 
-	free(EF);
+	free(ef);
 
-	printf("size of buffer: %d\n", sizeBuffer(buffer));
+	printf("size of buffer: %d\n", size_buffer(buffer));
 
-	deleteBufferList(buffer);
+	delete_buffer_list(buffer);
 	
 }
 
@@ -357,11 +387,11 @@ int main() {
 
 	//int n = 10;
 
-	//struct Orientation *orient = createCompleteGraph(n);
-	//printOrientation(orient);
+	//struct Orientation *orient = create_complete_graph(n);
+	//print_orientation(orient);
 
-	//struct BDDNode *bdd = createERBDD(12, 0.35);
-	//struct BDDNode *bdd = createCycleBDD(1000);
+	//struct BDDNode *bdd = create_erbdd(12, 0.35);
+	//struct BDDNode *bdd = create_cycle_bdd(1000);
 	//testEdgeOrder();
 	
 	//int n;
@@ -369,34 +399,33 @@ int main() {
 
 	
 	struct Orientation *orient;
-	char fileNameBase[] = "../graphs/";
-	char fileNameEnding[] = ".txt";
-	char fileName[256] = "";
+	char file_name_base[] = "../graphs/";
+	char file_name_ending[] = ".txt";
+	char file_name[256] = "";
 	char num[32] = "";
 	struct BDDNode *bdd;
-	for(int i = 5; i < 7; i++) {
-		printf("%d\n", i);
+	for(int i = 8; i < 10; i++) {
+		/////printf("%d\n", i);
 		sprintf(num, "%d", i+1);
-		strcat(fileName, fileNameBase);
-		strcat(fileName, num);
-		strcat(fileName, fileNameEnding);
-		orient = importFromFile(fileName);
-		//printOrientation(orient);fflush(stdout);
+		strcat(file_name, file_name_base);
+		strcat(file_name, num);
+		strcat(file_name, file_name_ending);
+		orient = import_from_file(file_name);
+		//print_orientation(orient);fflush(stdout);
 
 		clock_t t; 
 		t = clock(); 
 
-		bdd = createBDD(orient);
-		//bdd = createCompleteBDD(i);
+		bdd = create_bdd(orient, true);
+		//bdd = create_complete_bdd(i, false);
 
 		t = clock() - t; 
 		double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
-		//printf("It took %f seconds to create the BDD \n", time_taken);
-		printf("%f\n", time_taken);
-		testStack(bdd);
-		memset(fileName, 0, sizeof(fileName));
-		printf("\n");
-		deleteBDD(bdd);
+		/////printf("It took %f seconds to create the BDD \n", time_taken);
+		/////printf("%f\n", time_taken);
+		test_stack(bdd);
+		memset(file_name, 0, sizeof(file_name));
+		delete_bdd(bdd);
 	}
 	return 0;
 }

@@ -5,7 +5,7 @@ struct BDDNode {
 	int v;			/* index of variable */
 	struct BDDNode *lo;	/* pointer to node when false */
 	struct BDDNode *hi;	/* pointer to node when true */
-	bool isVisited;   	// get rid of this later
+	bool is_visited;   	// get rid of this later
 };
 
 struct TONode {
@@ -18,22 +18,22 @@ struct TONode {
 };
 
 struct TOStack {
-	struct TONode *nodeArray;
+	struct TONode *node_array;
 	int n;				// number of elements present
 	int l;				// length of array
 };
 
-struct BDDNode *newNullBDDNode (int v);
+struct BDDNode *new_null_bdd_node (int v);
 
-void delOneBDDNode (struct BDDNode *node);
+void del_one_bdd_node (struct BDDNode *node);
 
-int sizeOfBDD (struct BDDNode *node);
+int size_of_bdd (struct BDDNode *node);
 
-void deleteBDD (struct BDDNode *node);
+void delete_bdd (struct BDDNode *node);
 
-struct TOStack *constructTOStack (struct BDDNode *bdd);
+struct TOStack *contruct_to_stack (struct BDDNode *bdd);
 
-int *computeProfile(struct TOStack *s, int *length);
+int *compute_profile(struct TOStack *s, int *length);
 
-void testStack(struct BDDNode *bdd);
+void test_stack(struct BDDNode *bdd);
 #endif

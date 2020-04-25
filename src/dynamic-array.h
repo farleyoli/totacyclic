@@ -8,46 +8,46 @@ struct DynamicArray {
 	int j;			// Index of the first element.
 };
 
-struct DynamicArray* DAInitialize ();
+struct DynamicArray* da_initialize ();
 
-int DAGet (int i, struct DynamicArray* da);
+int da_get (int i, struct DynamicArray* da);
 
-int DASet (int i, int x, struct DynamicArray* da);
+int da_set (int i, int x, struct DynamicArray* da);
 
-void DAResize(struct DynamicArray* da);
+void da_resize(struct DynamicArray* da);
 
-void DAAdd (int i, int x, struct DynamicArray* da); 
+void da_add (int i, int x, struct DynamicArray* da); 
 
-int DARemoveByIdx (int i, struct DynamicArray* da);
+int da_remove_by_idx (int i, struct DynamicArray* da);
 
-void DAPrint (struct DynamicArray* da);
+void da_print (struct DynamicArray* da);
 
-void DATest ();
+void da_test ();
 
-void DADelete (struct DynamicArray* da);
+void da_delete (struct DynamicArray* da);
 
-struct DynamicArray* DADifference (struct DynamicArray* da, struct DynamicArray* db);
+struct DynamicArray* da_difference (struct DynamicArray* da, struct DynamicArray* db);
 
-struct DynamicArray* DACopy (struct DynamicArray* da);
+struct DynamicArray* da_copy (struct DynamicArray* da);
 
-struct DynamicArray* DAUnion (struct DynamicArray* da, struct DynamicArray* db, bool isSorted);
+struct DynamicArray* da_union (struct DynamicArray* da, struct DynamicArray* db, bool is_sorted);
 
-void DAAppend (int x, struct DynamicArray* da);
+void da_append (int x, struct DynamicArray* da);
 
-int DASize (struct DynamicArray* da);
+int da_size (struct DynamicArray* da);
 
-int DAGetIdx (int x, struct DynamicArray* da);
+int da_get_idx (int x, struct DynamicArray* da);
 
-int DARemoveElement(int x, struct DynamicArray* da);
+int da_remove_element(int x, struct DynamicArray* da);
 
-void DAAddSorted (int x, struct DynamicArray* da);
+void da_add_sorted (int x, struct DynamicArray* da);
 
-bool DAAreElementsEqualInOrder(struct DynamicArray* da, struct DynamicArray* db);
+bool da_are_elements_equal_in_order(struct DynamicArray* da, struct DynamicArray* db);
 
-bool DAIsSorted (struct DynamicArray* da);
+bool da_is_sorted (struct DynamicArray* da);
 
-bool DADoesContain (int x, struct DynamicArray* da, bool isSorted);
+bool da_does_contain (int x, struct DynamicArray* da, bool is_sorted);
 
-bool DAAreElementsEqualInOrderRestricted(struct DynamicArray* da, struct DynamicArray* db, struct DynamicArray* dc);
+bool da_are_elements_equal_in_order_restricted(struct DynamicArray* da, struct DynamicArray* db, struct DynamicArray* dc);
 
 #endif

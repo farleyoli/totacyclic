@@ -1,3 +1,3 @@
-int compareFunction (const void *a, const void *b);
+int compare_function (const void *a, const void *b);
 
-int getIdx (int* array, int x, int length);
+int get_idx (int* array, int x, int length);
